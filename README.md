@@ -1,1 +1,1 @@
-# risk_lotr_cheatsheet
+# risk_lotr_rules
