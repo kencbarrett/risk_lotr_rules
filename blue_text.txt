@@ -1,0 +1,670 @@
+Blue Text Extracted from PDF:
+
+These territories are grouped into 9 regions, each a  
+different color:
+REGION 
+COLOR  
+NO. OF TERRITORIES
+ARNOR 
+RED 
+11
+GONDOR 
+BROWN 
+10
+RHOVANION 
+ORANGE 
+8
+ROHAN 
+BLUE 
+7
+ERIADOR 
+YELLOW 
+7
+MORDOR 
+GRAY 
+6
+HARADWAITH 
+TAN 
+6
+MIRKWOOD 
+GREEN 
+5
+RHÛN 
+PURPLE 
+4
+Your battalions will be able to move from one territory to 
+another as long as the territories are adjacent. Territories are 
+adjacent if they share a border, or a sea-line connects them 
+across water.
+EXAMPLE: 
+ 
+The territory of Minhiriath is 
+adjacent to South Downs because 
+they share a border, and to 
+Enedwaith and Dunland because 
+bridges allow passage across the 
+separating river. Minhiriath is also 
+adjacent to Mithlond, Belfalas and 
+Umbar because sea-lines connect 
+them across the ocean. Battalions in 
+Minhiriath can attack any of these 
+adjacent territories. But beware, the 
+battalions in Minhiriath can also BE 
+attacked from any of these 
+territories. Minhiriath is not 
+adjacent to Harlindon or the Shire 
+because a river separates them and 
+there are no bridges to pass over. 
+INTRODUCTION
+Many, many years ago, The One Ring was forged by the Dark 
+Lord Sauron to control all of Middle-earth. Naturally, its awesome 
+strength is much desired by those who wish for power. For a long 
+time, its whereabouts remained secret, but recently its power has 
+been sensed again in the land of its creation. The forces of evil are 
+mounting a ferocious hunt to find The One Ring, while those of a 
+gentler nature are keen to keep it from their reach. 
+This special edition of RISK allows you to decide the fate of the 
+people of Middle-earth. You will play either a good force or an 
+evil force trying to gain control of the land. Muster your forces 
+to battle to ensure that Middle-earth falls into the right hands.
+You may also choose to use the RISK: The Lord of the Rings 
+Edition gameboard to play standard RISK, by leaving out the 
+special elements.
+The following rules are for the individual player game. There are 
+additional versions explained in the back of this rulebook.
+A LOOK AT THE STUFF  
+IN THE GAME
+First, take all of the game pieces and set them out where you can 
+see them. As you read these rules, look at these pieces so you 
+know how they all work.
+LET’S START WITH THE GAMEBOARD… 
+There it is – Middle-earth, just waiting for you to conquer it. The 
+gameboard is divided into 64 territories, each with its own name.
+In the lower left corner of the gameboard, there is a 
+battleground. This is where your battles will take place. 
+We will discuss this in more detail soon.
+ 
+NOW LET’S LOOK AT THE  
+PLASTIC PIECES…
+There are 4 armies in this game, each a different color. Each 
+player will be a different colored army. 
+If you look at the pieces closely, you’ll see that there are 6 
+different shapes: 3 for good and 3 for evil. All of these pieces 
+represent your battalions, but each one represents a different 
+number of battalions. They are:
+FORCES OF GOOD
+FORCES OF EVIL
+During the game, you will have many pieces on the board, 
+sometimes many in one territory. When this happens, use a larger 
+piece to save space. It’s a lot easier to have 2 Eagles on the board 
+instead of 10 Elven Archers (both equal 10 battalions). Just like 
+it’s easier to carry 2 nickels instead of 10 pennies, it’s easier to 
+move 2 Cavetrolls instead of 10 Orcs. 
+EXAMPLE: 
+In Minhiriath, Green has 1 Rider of Rohan and 2 
+Elven Archers. Since a Rider of Rohan represents 3 battalions and an 
+Elven Archer represents 1 battalion, the Green player has 5 battalions in 
+Minhiriath (3+1+1). The Red player has 1 Cavetroll, 1 Dark Rider and  
+1 Orc in Enedwaith. This represents 9 battalions (5+3+1).
+THE DICE
+Use the dice when attacking and defending territories.  
+The 3 red dice are used when attacking. The 2 black dice  
+are used when defending.
+THE CARDS
+Elven Archer  
+1 battalion
+Rider of Rohan 
+3 battalions
+Eagle  
+5 battalions
+Orc  
+1 battalion
+Dark Rider  
+3 battalions
+ Cavetroll 
+  5 battalions 
+ evil 
+good
+territory CardS
+There is 1 Territory card for each of the 64 territories on the 
+board. 
+ There are also 2 wild 
+cards that don’t have territories or good/evil symbols on them 
+but do have pictures of the 3 battalion types.
+Territory cards are used to determine positions at the start of 
+the game, and bonus reinforcements throughout the game. We’ll 
+explain how they work a little later.
+GETTING STARTED
+1.  Set out the gameboard so everyone can reach it.
+MISSION CARD
+EVENT CARD
+POWER CARD
+4.  Each player chooses a color and takes all of the battalions of 
+that color. Place your battalions in a pile near you. 
+Now get out your starting battalions. These battalions will be 
+placed on the board before play begins. The number of starting 
+battalions depends on the number of players.
+ # 
+of
+ P
+layerS
+ 
+S
+tarting
+ b
+attalionS
+ 2 
+PlayerS
+ 
+60 
+eaCh
+ (S
+ee
+ 2-
+Player
+ 
+ruleS
+ 
+on
+ 
+Page
+ 18.)
+ 3 
+PlayerS
+ 
+52 
+eaCh
+ 4 
+PlayerS
+ 
+45 
+eaCh
+Count out your starting battalions from your battalion pile, 
+and put them in front of you. 
+CLAIMING TERRITORIES
+Now, each player rolls 1 die to see who goes first – the high die 
+roll wins. Play then passes to the left.
+To claim an additional territory, take one of your starting 
+battalions and place it into an empty territory. You now control 
+this territory. The next player places a battalion into an empty 
+territory, claiming that territory, and so on. You cannot put a 
+battalion into a territory that has already been claimed.
+Eventually, all 64 territories will be claimed. Some players may 
+control one more territory than the other players.  This is OK. 
+© NLP™ Middle-earth Ent. Lic. to New Line. (s21). 
+© 2021 Hasbro.
+TM
+© NLP™ Middle-earth Ent. Lic. to New Line. (s21). 
+© 2021 Hasbro.
+i
+MPortant
+:
+ From now on, there will be no unclaimed territories 
+on the board. Control of a territory (the player who has 
+battalions there) may change, but a territory will never be 
+unclaimed.
+REINFORCING TERRITORIES
+Now that all of the territories are claimed, you will start 
+reinforcing your territories. The more battalions you have in a 
+territory, the easier it is to attack and defend from.  
+Reinforcing a territory is simple: just place one of your starting 
+battalions into a territory that you control. You cannot place 
+reinforcements into an enemy’s territory. After you place your 
+reinforcement, the player to your left reinforces one territory, then 
+the next player to the left, and so on. Keep going around the table 
+until all of each player’s starting battalions have been placed.
+There is no limit to the number of battalions that can be in a 
+territory. You can choose to reinforce one territory with a large 
+number of battalions or you can spread your battalions out 
+across all of your territories. 
+Now it’s time to declare war. Each player rolls 1 die to see who 
+starts the game. Note: The player who placed his/her battalions 
+first may or may not be the player who takes the first turn.
+YOUR TURN
+OVERVIEW
+At the start of each one of your turns, you will receive 
+additional battalions, which you will place on the board to 
+reinforce your army. Then you will be able to attack your 
+enemies, if you want. After you are done with combat, you 
+will get one chance to relocate some of your battalions. If you 
+conquer a territory on your turn, you get to draw a Territory 
+card. 
+That’s all there is to a turn. Now let’s go over things in more 
+detail so you can plan your conquest. 
+THE 7 STEPS OF YOUR TURN
+You must do these steps in order.
+1. Receive and place reinforcements (always).
+2. Combat (if you like).
+3. Fortify your position (if you like).
+4.  Collect a territory card (as long as you have conquered  
+a territory).
+S
+teP
+ 1: r
+eCeive
+ 
+and
+ P
+laCe
+ r
+einforCeMentS
+At the start of your turn, you get additional battalions to 
+reinforce your territories. How many reinforcements you get 
+depends on
+, the number 
+of territories you control, the number of regions you control (if 
+any), and any Territory card sets you turn in.
+C
+ount
+ y
+our
+ t
+erritorieS
+:
+ Now count the number of territories 
+you control (these are the territories with your battalions in 
+them). Take your total number of territories and divide them by 
+3 (ignore any remainders). This is the number of reinforcements 
+you receive. However, the number of reinforcements you receive 
+can NEVER be fewer than 3, so even if you control only a few 
+territories, you’ll always receive at least 3 reinforcements.  
+Take your reinforcements from your battalion pile and put them 
+in front of you. This is the start of your "reinforcement pile."
+Look at the list below to help you determine your reinforcements.
+    territorieS                       reinforCeMentS
+  
+1-11 
+3
+  
+12-14 
+4
+  
+15-17 
+5
+  
+18-20 
+6
+  
+21-23 
+7
+  
+24-26 
+8
+  
+27-29 
+9
+  
+30-32 
+10
+  
+33-35 
+11
+  
+36-38 
+12
+  
+39-41 
+13
+  
+42-44 
+14
+  
+45-47 
+15
+  
+48-50 
+16
+  
+51-53 
+17
+  
+54-56 
+18
+  
+57-59 
+19
+  
+60-62 
+20
+  
+63 
+21 
+d
+o
+ y
+ou
+ C
+ontrol
+ a
+ny
+ r
+egionS
+?
+ You also get reinforcements for 
+every region you control. Remember that a region is a group 
+of territories of the same color. If you control every territory 
+within the region, then you control the region. 
+The number of reinforcements you receive depends on  
+which region (or regions) you control (if any). The chart 
+on the left side of the gameboard shows how many 
+reinforcements you receive for each region. Count out these 
+reinforcements from your battalion pile and add them to the 
+reinforcement pile in front of you (the pile you started by 
+counting your territories).
+t
+urn
+ 
+in
+ a
+ny
+ C
+ard
+ S
+etS
+ y
+ou
+ M
+ay
+ h
+ave
+:
+ This may seem a little 
+out of place because we haven’t talked about how you get 
+Territory cards yet (we’ll talk about that more in Step 4), but 
+this is the time when you would turn in Territory cards for 
+bonus reinforcements.
+Remember how each Territory card has an image at the bottom 
+– an Elven Archer, a Dark Rider or an Eagle (the wild cards have 
+all 3)? When you have a set of 3 cards that show either the 
+same picture or one of each picture, you can turn them in for 
+reinforcements. If you have a wild card, it can count as any one of 
+the 3 – an Elven Archer, a Dark Rider or an Eagle.
+ 
+n
+ow
+ i
+t
+’
+S
+ t
+iMe
+ 
+to
+ P
+laCe
+ y
+our
+ r
+einforCeMentS
+:
+ After gathering 
+your reinforcements, place ALL of them into territories that 
+you control. You can choose to put all of your reinforcements 
+into one territory or spread them out across your territories. 
+Remember: You must place ALL of these reinforcements.
+S
+teP
+ 2: C
+oMbat
+Combat is the main part of your turn. It is here that you attack 
+your opponents and attempt to take territories from them. You 
+can choose how many times you want to attack, in what order, 
+and when to call it off. You can choose not to attack at all (if so, 
+skip to Step 3) or to attack until you have almost no battalions 
+left. You can even attack more than one territory on your turn. 
+a f
+ew
+ w
+ordS
+ 
+about
+ C
+oMbat
+Here are some terms used during combat:
+* The 
+attaCker
+ is the player whose turn it currently is.
+* The 
+defender
+ is the player being attacked.
+* An
+ 
+invaSion
+ is when a territory is being attacked. The 
+invasion lasts until either the territory is taken over or 
+until the attacker calls off the invasion. You may be able 
+to invade more than one territory on your turn.
+* A 
+battle
+ is one roll of the dice (for each, the attacker and 
+defender) during an invasion. An invasion may require 
+one battle or it may require dozens of battles.
+w
+here
+ C
+an
+ i i
+nvade
+?
+You can invade from any one territory you control into an 
+adjacent enemy’s territory. 
+ You can only invade an 
+enemy’s territories – not your own. Choose a territory you 
+control and announce the adjacent territory you wish to invade.
+h
+ow
+ y
+ou
+ b
+attle
+You must have at least 2 battalions in a territory in order to 
+attack. This is because 1 battalion must stay behind in order to 
+protect the territory you are invading from. This battalion must 
+be set aside and cannot be part of any battle. 
+Now choose how many battalions you will send from your 
+attacking territory into the battle. You can send 1, 2 or 3 
+battalions. Your invasion force may be much larger than 3, 
+but no more than 3 battalions can be sent into each battle. 
+Take your attacking battalions and place them on the 
+attacker’s spaces on the battleground (in the lower left 
+corner of the gameboard).
+Next, the defender chooses how many battalions will defend 
+from the attacked territory. You can defend with either 1 or 2 
+battalions. There may be more battalions in the territory, but 2 is 
+the maximum number of battalions you can defend with during 
+a battle. You will continue defending the attacked territory until 
+either your last battalion is defeated or your opponent calls off 
+the invasion. 
+Take your defending battalions and place them on the defender’s 
+spaces on the battleground.
+Let the battle begin… Each side rolls 1 die for each battalion 
+attacking or defending. This means the attacker will roll 1, 2 or 3 
+dice and the defender will roll 1 or 2 dice. 
+r
+eSolving
+ 
+the
+ b
+attle
+After both sides roll the dice, put your dice in order from 
+highest to lowest. You will then compare your highest die to 
+your opponent’s highest die to see who won. IMPORTANT: In 
+case of a tie roll, the DEFENDER wins. 
+The player with the highest die roll wins. The loser removes 
+a battalion from the battleground. This battalion has been 
+defeated. Put the defeated battalion back into its respective 
+battalion pile off the board. 
+After you and your opponent compare the highest dice, 
+compare the next-highest dice. 
+If there is no die to compare yours to, meaning you rolled 1 or 2 
+more dice than your opponent, then ignore those dice rolls.
+When the battle is over, all remaining battalions return to their 
+respective territories – but don’t worry, you may send them back 
+into battle immediately.
+C
+alling
+ o
+ff
+ 
+an
+ i
+nvaSion
+After any battle, you (the attacker) may choose to call off the 
+invasion. You may choose to invade a new territory, invade a 
+territory you attacked earlier during combat, or end the combat 
+part of your turn. 
+C
+hanging
+ 
+the
+ a
+ttaCking
+ t
+erritory
+ d
+uring
+ 
+an
+ i
+nvaSion
+In between battles, you can change the territory from which you 
+are invading and continue the invasion from a different, adjacent 
+territory. What you cannot do is battle with battalions from 
+different territories at the same time. During one battle, all of 
+your battalions must be from the same territory.
+w
+inning
+ 
+an
+ i
+nvaSion
+ 
+and
+ M
+oving
+ i
+n
+You win the invasion when you defeat the last defending 
+battalion from a territory. Take the battalions used to win the 
+battle and move them from the battleground into the territory 
+you invaded. You may now move any additional battalions from 
+your invading territory in to join them. So even though you can 
+only battle with 3 battalions, once you’ve won the invasion, you 
+can move more troops into your new territory. However, you 
+must do this before you declare a new invasion.
+e
+liMinating
+ a
+nother
+ P
+layer
+You eliminate another player if you defeat his/her last 
+battalion on the board. This player is now out of the game. As a 
+reward, you get all of that player’s Territory cards (if he/she has 
+any). Add these Territory cards to your hand. 
+ 
+If your new hand of Territory cards is now 5 or more, you must 
+stop and immediately turn a set in for bonus reinforcements. You 
+place these reinforcements into any of your territories. If you 
+still have 5 or more cards, then turn in another set and place 
+these reinforcements as well. Finally, when you have 4 or fewer 
+cards, continue your turn.
+S
+teP
+ 3: f
+ortify
+ y
+our
+ P
+oSition
+After you are finished with combat (and it is your choice when 
+you are done), you get ONE fortification (or "free move") with 
+your battalions. 
+To fortify your position, take as many battalions as you’d 
+like from one of your territories and move them to another 
+connected territory. (Remember: You MUST leave at least one 
+battalion behind  -- you cannot abandon a territory.) 
+Territories are "connected" if all the territories in between 
+are also CONTROLLED BY YOU. You cannot pass through 
+territories controlled by another player.  
+Fortification is not an attack; it is simply a movement from one 
+of your territories to another in order to protect your front line 
+or to get into position for your next turn.
+S
+teP
+ 4: C
+olleCt
+ 
+a
+ t
+erritory
+ C
+ard
+At the end of your turn, you may be able to collect a 
+Territory card. 
+If you conquered at least 1 territory on your turn, then you 
+get 1 Territory card. Draw it off the top of the deck and add 
+it to your hand. It doesn’t matter whether you conquered 1 
+territory or 40 territories, you only get 1 Territory card. If 
+you didn’t conquer any territories on your turn, then you 
+do not get a Territory card.
+OTHER WAYS TO PLAY
+STANDARD RISK
+You can play standard RISK on the RISK: The Lord of the Rings 
+Edition gameboard. Simply follow all the rules in black, ignoring 
+the rules in blue. The game will continue until one player 
+controls the entire board.
+© 2021 New Line Productions, Inc. All rights reserved. The Lord of the Rings: The Fellowship of the Ring, The Lord 
+of the Rings: The Two Towers, The Lord of the Rings: The Return of the King and the names of the characters, items, 
+events and places therein are trademarks of The Saul Zaentz Company d/b/a Middle-earth Enterprises under license 
+to New Line Productions, Inc.
+RISK and HASBRO and all related trademarks and logos are trademarks of Hasbro, Inc. © 2021 Hasbro. TM & ® 
+denote U.S. Trademarks. Hasbro, Pawtucket, RI 02861-1059 USA. Retain this information for future reference.
+Consumer contact: 
+US/Canada: Hasbro Games, Consumer Affairs Dept., P.O. Box 200, Pawtucket, RI 02861-1059 USA.  
+TEL. 1-800-255-5516.
+Australia consumer service:  https://consumercare.hasbro.com/en-au
+New Zealand consumer service: https://consumercare.hasbro.com/en-nz
+PARENTS:
+FINDING THE RING
+There is one extra step to your turn. This is where the evil player 
+may try to find The One Ring.
+THE 8 STEPS TO YOUR TURN
+1. Receive and place Reinforcements (always)
+2. Combat (If you like)
+3. Fortify your position (if you like)
+4. Collect a Territory card (as long as you have conquered a 
+territory)
+5. Collect an Adventrue card (as long as your Leader has 
+conquered a territory that has a Site of Power within it)
+6. Replace a Leader (if you have none on the board)
+7. Try to find The One Ring (only if The One Ring is in a 
+territory controlled by an evil player)
+8. Move the Fellowship
+S
+teP
+ 7: t
+ry
+ 
+to
+ f
+ind
+ t
+he
+ o
+ne
+ r
+ing
+Just before moving the Fellowship, check to see if The One Ring is 
+in a territory controlled by evil. If so, the evil player who controls 
+the territory rolls 2 dice (it doesn’t matter which color).
+* 
+If that evil player controls the entire region, add 1 to the dice roll.
+* 
+If that evil player’s Leader is in the territory, add 1 to the dice roll.
+* 
+If that evil player controls the entire region, and has a Leader 
+present, add 2 to the dice roll.
+If the total of the dice roll plus any bonuses added is 12 or higher, 
+The One Ring is found and evil instantly wins. 
+4151B6330000000

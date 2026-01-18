@@ -1,0 +1,6 @@
+Source: /Users/kencbarrett/dev/python/risk_lotr_rules/risk-lord-of-the-rings-edition.pdf
+✓ Cheat sheet created: lotr_risk_cheatsheet.txt
+✓ HTML cheat sheet created: lotr_risk_cheatsheet.html
+✓ PDF cheat sheet created: lotr_risk_cheatsheet.pdf
+✓ Blue text saved as text: blue_text.txt
+✓ Blue text saved as HTML: blue_text.html
