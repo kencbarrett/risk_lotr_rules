@@ -68,13 +68,9 @@ def extract_objects(src_path: str) -> tuple:
                         fontname="Times-Roman",
                         color=0  # Default, or compute from spans if needed
                     ))
-        
-        # Extract images using page.get_images() - more reliable method
-        image_list = page.get_images()
-        if image_list:
-            print(f"  Page {pno + 1}: Found {len(image_list)} images")
-            for img_info in image_list:
-                xref = img_info[0]  # First element is xref
+            elif btype == 1:
+                # Image block
+                xref = b.get("image")
                 if xref and xref not in extracted_xrefs:
                     try:
                         pix = fitz.Pixmap(src, xref)
