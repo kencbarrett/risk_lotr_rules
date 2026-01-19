@@ -2,21 +2,95 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RISK: Lord of the Rings - Quick Reference</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-        .container { max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
-        h1 { text-align: center; border-bottom: 3px solid #333; padding-bottom: 10px; }
-        h2 { border-left: 4px solid #007bff; padding-left: 10px; margin-top: 20px; }
-        table { border-collapse: collapse; margin: 10px 0; width: 100%; }
-        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        tr:nth-child(even) { background-color: #f9f9f9; }
-        .image-section { margin: 20px 0; text-align: center; }
-        .image-section img { max-width: 100%; height: auto; border: 1px solid #ddd; margin: 10px 0; }
-        ul { margin: 10px 0; padding-left: 20px; }
-        li { margin: 5px 0; }
-        .info-box { background: #e7f3ff; padding: 10px; border-left: 4px solid #2196F3; margin: 10px 0; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5; 
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            text-align: center; 
+            border-bottom: 3px solid #333; 
+            padding-bottom: 10px; 
+            color: #2c3e50;
+        }
+        h2 { 
+            border-left: 4px solid #007bff; 
+            padding-left: 10px; 
+            margin-top: 30px; 
+            color: #34495e;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        table { 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+            width: 100%; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 10px 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        tr:nth-child(even) { 
+            background-color: #f9f9f9; 
+        }
+        .image-section { 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+        .image-section img { 
+            max-width: 100%; 
+            height: auto; 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        ul { 
+            margin: 10px 0; 
+            padding-left: 25px; 
+        }
+        li { 
+            margin: 8px 0; 
+        }
+        .info-box { 
+            background: #e7f3ff; 
+            padding: 15px; 
+            border-left: 4px solid #2196F3; 
+            margin: 15px 0; 
+            border-radius: 4px;
+        }
+        .page-images {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -76,40 +150,32 @@
         <h2>Battalion Values</h2>
         <table>
             <tr>
-                <th colspan="3">Good Armies</th>
-                <th colspan="3">Evil Armies</th>
+                <th colspan="2">Good Armies</th>
+                <th colspan="2">Evil Armies</th>
             </tr>
             <tr>
                 <th>Unit</th>
                 <th>Value</th>
-                <th>Image</th>
                 <th>Unit</th>
                 <th>Value</th>
-                <th>Image</th>
             </tr>
             <tr>
                 <td>Elven Archer</td>
                 <td>1 battalion</td>
-                <td><img src="" style="max-width: 60px; height: auto;"></td>
                 <td>Orc</td>
                 <td>1 battalion</td>
-                <td><img src="" style="max-width: 60px; height: auto;"></td>
             </tr>
             <tr>
                 <td>Rider of Rohan</td>
                 <td>3 battalions</td>
-                <td><img src="" style="max-width: 60px; height: auto;"></td>
                 <td>Dark Rider</td>
                 <td>3 battalions</td>
-                <td><img src="" style="max-width: 60px; height: auto;"></td>
             </tr>
             <tr>
                 <td>Eagle</td>
                 <td>5 battalions</td>
-                <td><img src="" style="max-width: 60px; height: auto;"></td>
                 <td>Cave Troll</td>
                 <td>5 battalions</td>
-                <td><img src="" style="max-width: 60px; height: auto;"></td>
             </tr>
         </table>
         
@@ -128,7 +194,39 @@
             <p><strong>Strongholds:</strong> +1 reinforcement (counted as part of region, not added)</p>
             <p><strong>Sites of Power:</strong> +2 pts, but only if you control entire region</p>
         </div>
-        
+
+        <div class="page-images">
+            <h3>Visual Reference from Page 3</h3>
+            <div class="image-grid">
+                <img src="cheatsheet_images/page3_img50_74.jpg" alt="Page 3 image 50">
+                <img src="cheatsheet_images/page3_img51_77.png" alt="Page 3 image 51">
+                <img src="cheatsheet_images/page3_img52_78.jpg" alt="Page 3 image 52">
+            </div>
+        </div>
+
+        <div class="page-images">
+            <h3>Visual Reference from Page 4</h3>
+            <div class="image-grid">
+                <img src="cheatsheet_images/page4_img51_86.jpg" alt="Page 4 image 51">
+                <img src="cheatsheet_images/page4_img52_87.jpg" alt="Page 4 image 52">
+                <img src="cheatsheet_images/page4_img53_94.jpg" alt="Page 4 image 53">
+                <img src="cheatsheet_images/page4_img54_95.jpg" alt="Page 4 image 54">
+                <img src="cheatsheet_images/page4_img55_96.jpg" alt="Page 4 image 55">
+                <img src="cheatsheet_images/page4_img56_103.jpg" alt="Page 4 image 56">
+                <img src="cheatsheet_images/page4_img57_104.jpg" alt="Page 4 image 57">
+                <img src="cheatsheet_images/page4_img58_105.jpg" alt="Page 4 image 58">
+                <img src="cheatsheet_images/page4_img59_106.jpg" alt="Page 4 image 59">
+            </div>
+        </div>
+
+        <div class="page-images">
+            <h3>Visual Reference from Page 7</h3>
+            <div class="image-grid">
+                <img src="cheatsheet_images/page7_img35_129.jpg" alt="Page 7 image 35">
+                <img src="cheatsheet_images/page7_img36_130.jpg" alt="Page 7 image 36">
+            </div>
+        </div>
+
         <h2>Adventure Cards</h2>
         <ul>
             <li><strong>Mission:</strong> Complete by getting Leader to specified location</li>

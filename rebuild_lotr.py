@@ -2,10 +2,14 @@
 """Extract text and images from a PDF into structured objects."""
 import fitz
 import os
-import cv2
-import numpy as np
+import logging
+import sys
 from dataclasses import dataclass
-from typing import List, Union, Dict
+from typing import List, Union, Optional, Dict
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
 
 SRC = os.path.join(os.path.dirname(__file__), "risk-lord-of-the-rings-edition.pdf")
 OUT = os.path.join(os.path.dirname(__file__), "rebuilt_lotr.pdf")
@@ -17,7 +21,7 @@ class TextObject:
     bbox: tuple  # (x0, y0, x1, y1)
     fontsize: float
     fontname: str
-    color: int  # Add color field
+    page_num: int  # Add page number for reference
 
 
 @dataclass
@@ -25,83 +29,303 @@ class ImageObject:
     image_bytes: bytes
     bbox: tuple  # (x0, y0, x1, y1)
     xref: int
+    page_num: int  # Add page number for reference
+    width: Optional[int] = None
+    height: Optional[int] = None
+    ext: Optional[str] = None  # Image format extension
 
 
-def extract_objects(src_path: str) -> tuple:
-    """Extract all objects from PDF, organized by page."""
+def extract_text_from_block(block: dict) -> Optional[str]:
+    """Extract text from a text block."""
+    lines = []
+    for line in block.get("lines", []):
+        spans = [span.get("text", "") for span in line.get("spans", [])]
+        line_text = "".join(spans)
+        if line_text.strip():
+            lines.append(line_text)
+    return "\n".join(lines).strip() if lines else None
+
+
+def get_font_info_from_block(block: dict) -> tuple:
+    """Extract font size and name from block spans."""
+    fontsize = 11.0  # Default
+    fontname = "Times-Roman"  # Default
+    
+    for line in block.get("lines", []):
+        for span in line.get("spans", []):
+            if "size" in span:
+                fontsize = span["size"]
+            if "font" in span:
+                fontname = span["font"]
+            if fontsize != 11.0 and fontname != "Times-Roman":
+                break
+        if fontsize != 11.0 and fontname != "Times-Roman":
+            break
+    
+    return fontsize, fontname
+
+
+def extract_objects(src_path: str, extract_page_images: bool = False) -> dict:
+    """
+    Extract all objects from PDF, organized by page.
+    
+    Args:
+        src_path: Path to source PDF
+        extract_page_images: If True, also extract full page images
+    
+    Returns:
+        Dictionary mapping page numbers to lists of TextObject and ImageObject
+    """
+    if not os.path.exists(src_path):
+        raise FileNotFoundError(f"PDF file not found: {src_path}")
+    
     src = fitz.open(src_path)
     pages_data = {}
-    extracted_xrefs = set()  # Track which images we've already extracted
-    blue_text = []  # Collect blue text across all pages
+    seen_xrefs = set()  # Track extracted images to avoid duplicates
 
+    logger.info(f"Extracting objects from {src.page_count} pages...")
+    
     for pno in range(src.page_count):
         page = src.load_page(pno)
         page_objects: List[Union[TextObject, ImageObject]] = []
-        
         rect = page.rect
-        pd = page.get_text("dict")
         
-        bbox = (0, 0, rect.width, rect.height)  # Default bbox
+        try:
+            pd = page.get_text("dict")
+        except Exception as e:
+            logger.warning(f"Page {pno + 1}: Failed to extract text dict: {e}")
+            pd = {}
+        
+        if not isinstance(pd, dict):
+            pages_data[pno] = page_objects
+            continue
+
+        # Extract text blocks
         for b in pd.get("blocks", []):
             btype = b.get("type")
             bbox = tuple(b.get("bbox", [0, 0, rect.width, rect.height]))
             
-            if btype == 0:
-                # Text block
-                lines = []
-                for line in b.get("lines", []):
-                    spans = []
-                    for span in line.get("spans", []):
-                        color = span.get("color", 0)
-                        text = span.get("text", "")
-                        if color == 2301728:  # Blue color
-                            blue_text.append(text)
-                        spans.append(text)
-                    lines.append("".join(spans))
-                text = "\n".join(lines).strip()
-                
+            if btype == 0:  # Text block
+                text = extract_text_from_block(b)
                 if text:
+                    fontsize, fontname = get_font_info_from_block(b)
                     page_objects.append(TextObject(
                         text=text,
                         bbox=bbox,
-                        fontsize=11,
-                        fontname="Times-Roman",
-                        color=0  # Default, or compute from spans if needed
+                        fontsize=fontsize,
+                        fontname=fontname,
+                        page_num=pno
                     ))
-            elif btype == 1:
-                # Image block
-                xref = b.get("image")
-                if xref and xref not in extracted_xrefs:
-                    try:
-                        pix = fitz.Pixmap(src, xref)
-                        # Use proper PNG encoding
-                        if pix.n - pix.alpha < 4:  # GRAY or RGB
-                            image_bytes = pix.tobytes("png")
-                        else:  # CMYK
-                            pix = fitz.Pixmap(fitz.csRGB, pix)
-                            image_bytes = pix.tobytes("png")
+            
+            elif btype == 1:  # Image block
+                img_block = b.get("image")
+                xref = None
+                
+                try:
+                    if isinstance(img_block, dict):
+                        xref = img_block.get("xref")
+                    elif isinstance(img_block, int):
+                        xref = img_block
+                    
+                    if xref and xref not in seen_xrefs:
+                        img_info = src.extract_image(xref)
+                        img_bytes = img_info.get("image")
                         
-                        if image_bytes and len(image_bytes) > 0:
+                        if img_bytes:
+                            seen_xrefs.add(xref)
                             page_objects.append(ImageObject(
-                                image_bytes=image_bytes,
+                                image_bytes=img_bytes,
                                 bbox=bbox,
-                                xref=xref
+                                xref=xref,
+                                page_num=pno,
+                                width=img_info.get("width"),
+                                height=img_info.get("height"),
+                                ext=img_info.get("ext", "jpg")
                             ))
-                            extracted_xrefs.add(xref)
-                            print(f"    Extracted image xref {xref}")
-                        else:
-                            print(f"    Warning: Could not encode image xref {xref}: empty bytes")
-                    except Exception as e:
-                        print(f"    Warning: Could not extract image xref {xref}: {e}")
+                except Exception as e:
+                    logger.warning(f"Page {pno + 1}: Failed to extract image block: {e}")
+        
+        # Extract images directly from page (fallback for images not in blocks)
+        try:
+            for img_index in page.get_images():
+                xref = img_index[0]
+                
+                if xref in seen_xrefs:
+                    continue
+                
+                try:
+                    img_info = src.extract_image(xref)
+                    if img_info and img_info.get("image"):
+                        img_bytes = img_info.get("image")
+                        
+                        # Try to find bbox from text dict if available
+                        found_bbox = None
+                        for b in pd.get("blocks", []):
+                            if b.get("type") == 1:
+                                img_block = b.get("image")
+                                if isinstance(img_block, dict) and img_block.get("xref") == xref:
+                                    found_bbox = tuple(b.get("bbox", [0, 0, rect.width, rect.height]))
+                                    break
+                                elif isinstance(img_block, int) and img_block == xref:
+                                    found_bbox = tuple(b.get("bbox", [0, 0, rect.width, rect.height]))
+                                    break
+                        
+                        # Use page dimensions if bbox not found
+                        if found_bbox is None:
+                            found_bbox = (0, 0, rect.width, rect.height)
+                        
+                        seen_xrefs.add(xref)
+                        page_objects.append(ImageObject(
+                            image_bytes=img_bytes,
+                            bbox=found_bbox,
+                            xref=xref,
+                            page_num=pno,
+                            width=img_info.get("width"),
+                            height=img_info.get("height"),
+                            ext=img_info.get("ext", "jpg")
+                        ))
+                except Exception as e:
+                    logger.warning(f"Page {pno + 1}: Failed to extract image xref {xref}: {e}")
+        except Exception as e:
+            logger.warning(f"Page {pno + 1}: Failed to get page images: {e}")
+        
+        # Optionally extract full page image
+        if extract_page_images:
+            try:
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x zoom for better quality
+                page_img_bytes = pix.tobytes("png")
+                page_objects.append(ImageObject(
+                    image_bytes=page_img_bytes,
+                    bbox=(0, 0, rect.width, rect.height),
+                    xref=-1,  # Special marker for page images
+                    page_num=pno,
+                    width=pix.width,
+                    height=pix.height,
+                    ext="png"
+                ))
+            except Exception as e:
+                logger.warning(f"Page {pno + 1}: Failed to extract page image: {e}")
         
         pages_data[pno] = page_objects
+        img_count = sum(1 for obj in page_objects if isinstance(obj, ImageObject))
+        text_count = sum(1 for obj in page_objects if isinstance(obj, TextObject))
+        logger.info(f"Page {pno + 1}: {text_count} text blocks, {img_count} images")
 
     src.close()
-    return pages_data, blue_text
+    return pages_data
+
+
+def categorize_image(image_obj: ImageObject, page_text: str = "") -> str:
+    """
+    Categorize images based on context.
+    Returns: 'map', 'card', 'piece', 'diagram', 'other'
+    """
+    # Use bbox size and position as hints
+    bbox = image_obj.bbox
+    width = bbox[2] - bbox[0]
+    height = bbox[3] - bbox[1]
+    
+    # Large images are likely maps or full-page content
+    if width > 2000 or height > 2000:
+        return "map"
+    
+    # Small, square-ish images might be game pieces or cards
+    if 200 < width < 500 and 200 < height < 500:
+        aspect_ratio = width / height if height > 0 else 1
+        if 0.6 < aspect_ratio < 1.4:
+            return "card"
+        return "piece"
+    
+    # Medium images might be diagrams
+    if 500 < width < 1500 or 500 < height < 1500:
+        return "diagram"
+    
+    return "other"
+
+
+def extract_images(objects: dict, output_dir: str = "cheatsheet_images", 
+                   categorize: bool = False, min_size: int = 50) -> Dict[tuple, str]:
+    """
+    Extract and save images from PDF to directory.
+    
+    Args:
+        objects: Dictionary of page objects
+        output_dir: Output directory for images
+        categorize: If True, organize images into subdirectories
+        min_size: Minimum width or height in pixels to extract (filters tiny icons)
+    
+    Returns:
+        Dictionary mapping (page_num, idx) to filepath
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    
+    if categorize:
+        for cat in ["maps", "cards", "pieces", "diagrams", "other"]:
+            os.makedirs(os.path.join(output_dir, cat), exist_ok=True)
+    
+    image_paths = {}
+    page_text_cache = {}  # Cache page text for categorization
+    
+    for page_num in sorted(objects.keys()):
+        # Get page text for categorization
+        if categorize:
+            page_text = " ".join([
+                obj.text for obj in objects[page_num] 
+                if isinstance(obj, TextObject)
+            ])
+            page_text_cache[page_num] = page_text
+        
+        for idx, obj in enumerate(objects[page_num]):
+            if isinstance(obj, ImageObject):
+                # Filter out tiny images (likely decorative icons)
+                bbox = obj.bbox
+                img_width = bbox[2] - bbox[0]
+                img_height = bbox[3] - bbox[1]
+                
+                if img_width < min_size and img_height < min_size:
+                    logger.debug(f"Skipping tiny image on page {page_num + 1}: {img_width}x{img_height}")
+                    continue
+                
+                # Determine file extension
+                ext = obj.ext or "jpg"
+                if not obj.image_bytes.startswith(b'\x89PNG'):
+                    if obj.image_bytes.startswith(b'GIF'):
+                        ext = "gif"
+                    elif obj.image_bytes.startswith(b'\xff\xd8'):
+                        ext = "jpg"
+                    else:
+                        # Try to detect from first bytes
+                        ext = "png" if obj.ext == "png" else "jpg"
+                
+                # Generate filename
+                if obj.xref == -1:  # Page image
+                    filename = f"page{page_num + 1}_full.{ext}"
+                else:
+                    filename = f"page{page_num + 1}_img{idx}_{obj.xref}.{ext}"
+                
+                # Add category to path if categorizing
+                if categorize:
+                    category = categorize_image(obj, page_text_cache.get(page_num, ""))
+                    filepath = os.path.join(output_dir, category, filename)
+                else:
+                    filepath = os.path.join(output_dir, filename)
+                
+                try:
+                    with open(filepath, 'wb') as f:
+                        f.write(obj.image_bytes)
+                    
+                    image_paths[(page_num, idx)] = filepath
+                    size_kb = len(obj.image_bytes) / 1024
+                    logger.info(f"  Extracted: {filename} ({size_kb:.1f} KB)")
+                except Exception as e:
+                    logger.error(f"  Failed to save {filename}: {e}")
+    
+    return image_paths
+
 
 def create_cheat_sheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.txt"):
     """Extract important rules and create an organized cheat sheet."""
-    with open(output_path, 'w') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         f.write("=" * 70 + "\n")
         f.write("RISK: LORD OF THE RINGS - QUICK REFERENCE CHEAT SHEET\n")
         f.write("=" * 70 + "\n\n")
@@ -195,228 +419,114 @@ def create_cheat_sheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.t
             f.write(all_text[page_num])
             f.write("\n")
     
-    print(f"✓ Cheat sheet created: {output_path}")
+    logger.info(f"✓ Cheat sheet created: {output_path}")
 
 
-def extract_images(objects: dict, output_dir: str = "cheatsheet_images"):
-    """Extract and save images from PDF to directory."""
-    import os
-    os.makedirs(output_dir, exist_ok=True)
-    
-    image_paths = {}
-    global_counter = 1
-    for page_num in sorted(objects.keys()):
-        for idx, obj in enumerate(objects[page_num]):
-            if isinstance(obj, ImageObject):
-                # Determine file extension
-                # Try to detect format from bytes
-                img_bytes = obj.image_bytes
-                ext = "jpg"
-                if img_bytes.startswith(b'\x89PNG'):
-                    ext = "png"
-                elif img_bytes.startswith(b'GIF'):
-                    ext = "gif"
-                
-                filename = f"image_{global_counter:03d}.{ext}"
-                filepath = os.path.join(output_dir, filename)
-                
-                try:
-                    with open(filepath, 'wb') as f:
-                        bytes_written = f.write(img_bytes)
-                    
-                    if bytes_written > 0:
-                        image_paths[(page_num, idx)] = filepath
-                        print(f"  Extracted: {filename} ({bytes_written} bytes)")
-                    else:
-                        print(f"  Warning: {filename} has 0 bytes")
-                except Exception as e:
-                    print(f"  Error writing {filename}: {e}")
-                
-                global_counter += 1
-    
-    print(f"✓ Total images extracted: {len(image_paths)}")
-    return image_paths
-
-
-def segment_composite_images(image_dir: str = "cheatsheet_images", output_dir: str = "cheatsheet_images/pieces"):
-    """Segment composite images into individual pieces using contour detection."""
-    # Delete existing pieces to force re-segmentation
-    if os.path.exists(output_dir):
-        import shutil
-        shutil.rmtree(output_dir)
-        print(f"  Deleted existing pieces folder")
-    
-    os.makedirs(output_dir, exist_ok=True)
-    piece_paths = {}  # Maps piece identity to file path
-    
-    if not os.path.exists(image_dir):
-        print(f"  Warning: {image_dir} does not exist")
-        return piece_paths
-    
-    images = [f for f in sorted(os.listdir(image_dir)) if f.lower().endswith(('.png', '.jpg', '.jpeg')) and not os.path.isdir(os.path.join(image_dir, f))]
-    print(f"  Found {len(images)} images to segment")
-    
-    piece_counter = 1
-    for filename in images:
-        filepath = os.path.join(image_dir, filename)
-        
-        try:
-            # Read image
-            img = cv2.imread(filepath)
-            if img is None:
-                print(f"    ✗ {filename}: Could not read")
-                continue
-            
-            print(f"    Processing: {filename} ({img.shape[1]}x{img.shape[0]})")
-            
-            # Convert to grayscale
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            
-            # Try different thresholds to find best segmentation
-            thresholds_to_try = [
-                ("Otsu", lambda: cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]),
-                ("Fixed 200", lambda: cv2.threshold(gray, 200, 255, cv2.THRESH_BINARY_INV)[1]),
-                ("Fixed 100", lambda: cv2.threshold(gray, 100, 255, cv2.THRESH_BINARY_INV)[1]),
-                ("Fixed 150", lambda: cv2.threshold(gray, 150, 255, cv2.THRESH_BINARY_INV)[1]),
-            ]
-            
-            thresh = None
-            used_method = None
-            
-            for method_name, threshold_func in thresholds_to_try:
-                try:
-                    thresh = threshold_func()
-                    used_method = method_name
-                    break
-                except Exception as e:
-                    print(f"      Threshold {method_name} failed: {e}")
-                    continue
-            
-            if thresh is None:
-                print(f"    ✗ {filename}: All thresholds failed")
-                continue
-            
-            # Find contours
-            contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            print(f"      Found {len(contours)} contours with {used_method}")
-            
-            # Filter contours by size - dynamic threshold based on image size
-            img_area = gray.shape[0] * gray.shape[1]
-            min_area = max(200, img_area // 200)
-            print(f"      Min area threshold: {min_area} (image area: {img_area})")
-            
-            valid_contours = []
-            for contour in contours:
-                area = cv2.contourArea(contour)
-                if area >= min_area:
-                    valid_contours.append(contour)
-            
-            print(f"      Valid contours after filtering: {len(valid_contours)}")
-            
-            if len(valid_contours) == 0:
-                print(f"      → No pieces found (try adjusting min_area)")
-                continue
-            
-            for contour in sorted(valid_contours, key=lambda c: cv2.boundingRect(c)[0]):  # Sort left to right
-                x, y, w, h = cv2.boundingRect(contour)
-                
-                # Extract piece with some padding
-                padding = 5
-                x_start = max(0, x - padding)
-                y_start = max(0, y - padding)
-                x_end = min(img.shape[1], x + w + padding)
-                y_end = min(img.shape[0], y + h + padding)
-                
-                piece = img[y_start:y_end, x_start:x_end]
-                
-                # Save piece
-                piece_filename = f"piece_{piece_counter:04d}.png"
-                piece_filepath = os.path.join(output_dir, piece_filename)
-                cv2.imwrite(piece_filepath, piece)
-                
-                piece_paths[piece_counter] = piece_filepath
-                piece_counter += 1
-            
-            print(f"    ✓ Extracted {len(valid_contours)} pieces from {filename}")
-        
-        except Exception as e:
-            print(f"    ✗ {filename}: {e}")
-    
-    print(f"  Total pieces extracted: {len(piece_paths)}")
-    return piece_paths
-
-
-def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.html"):
+def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.html",
+                          include_all_images: bool = True):
     """Create an HTML version of the cheat sheet with embedded images."""
-    piece_paths = segment_composite_images()
+    image_paths = extract_images(objects)
     
-    # Map pieces to battalion types (adjust based on actual piece extraction order)
-    # These are placeholder mappings - you may need to adjust based on actual piece order
-    good_piece_map = {
-        "Elven Archer": piece_paths.get(1, ""),
-        "Rider of Rohan": piece_paths.get(2, ""),
-        "Eagle": piece_paths.get(3, "")
-    }
-    evil_piece_map = {
-        "Orc": piece_paths.get(4, ""),
-        "Dark Rider": piece_paths.get(5, ""),
-        "Cave Troll": piece_paths.get(6, "")
-    }
+    # Collect images by page for better organization
+    images_by_page = {}
+    for (page_num, idx), path in image_paths.items():
+        if page_num not in images_by_page:
+            images_by_page[page_num] = []
+        images_by_page[page_num].append((idx, path))
     
-    # Build battalion tables with images
-    good_battalion_rows = ""
-    for unit, image_path in good_piece_map.items():
-        if unit == "Elven Archer":
-            value = "1 battalion"
-        elif unit == "Rider of Rohan":
-            value = "3 battalions"
-        else:
-            value = "5 battalions"
-        
-        img_html = f'<img src="{image_path}" style="max-width: 60px; height: auto;">' if image_path else "N/A"
-        good_battalion_rows += f"""            <tr>
-                <td>{unit}</td>
-                <td>{value}</td>
-                <td>{img_html}</td>
-            </tr>
-"""
-    
-    evil_battalion_rows = ""
-    for unit, image_path in evil_piece_map.items():
-        if unit == "Orc":
-            value = "1 battalion"
-        elif unit == "Dark Rider":
-            value = "3 battalions"
-        else:
-            value = "5 battalions"
-        
-        img_html = f'<img src="{image_path}" style="max-width: 60px; height: auto;">' if image_path else "N/A"
-        evil_battalion_rows += f"""            <tr>
-                <td>{unit}</td>
-                <td>{value}</td>
-                <td>{img_html}</td>
-            </tr>
-"""
-    
-    html = f"""<!DOCTYPE html>
+    html = """<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RISK: Lord of the Rings - Quick Reference</title>
     <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }}
-        .container {{ max-width: 900px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }}
-        h1 {{ text-align: center; border-bottom: 3px solid #333; padding-bottom: 10px; }}
-        h2 {{ border-left: 4px solid #007bff; padding-left: 10px; margin-top: 20px; }}
-        table {{ border-collapse: collapse; margin: 10px 0; width: 100%; }}
-        th, td {{ border: 1px solid #ddd; padding: 8px 12px; text-align: left; }}
-        th {{ background-color: #007bff; color: white; }}
-        tr:nth-child(even) {{ background-color: #f9f9f9; }}
-        .image-section {{ margin: 20px 0; text-align: center; }}
-        .image-section img {{ max-width: 100%; height: auto; border: 1px solid #ddd; margin: 10px 0; }}
-        ul {{ margin: 10px 0; padding-left: 20px; }}
-        li {{ margin: 5px 0; }}
-        .info-box {{ background: #e7f3ff; padding: 10px; border-left: 4px solid #2196F3; margin: 10px 0; }}
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 20px; 
+            background: #f5f5f5; 
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 30px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { 
+            text-align: center; 
+            border-bottom: 3px solid #333; 
+            padding-bottom: 10px; 
+            color: #2c3e50;
+        }
+        h2 { 
+            border-left: 4px solid #007bff; 
+            padding-left: 10px; 
+            margin-top: 30px; 
+            color: #34495e;
+        }
+        h3 {
+            color: #555;
+            margin-top: 20px;
+        }
+        table { 
+            border-collapse: collapse; 
+            margin: 15px 0; 
+            width: 100%; 
+        }
+        th, td { 
+            border: 1px solid #ddd; 
+            padding: 10px 12px; 
+            text-align: left; 
+        }
+        th { 
+            background-color: #007bff; 
+            color: white; 
+        }
+        tr:nth-child(even) { 
+            background-color: #f9f9f9; 
+        }
+        .image-section { 
+            margin: 20px 0; 
+            text-align: center; 
+        }
+        .image-section img { 
+            max-width: 100%; 
+            height: auto; 
+            border: 1px solid #ddd; 
+            margin: 10px 0; 
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        ul { 
+            margin: 10px 0; 
+            padding-left: 25px; 
+        }
+        li { 
+            margin: 8px 0; 
+        }
+        .info-box { 
+            background: #e7f3ff; 
+            padding: 15px; 
+            border-left: 4px solid #2196F3; 
+            margin: 15px 0; 
+            border-radius: 4px;
+        }
+        .page-images {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -476,40 +586,32 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         <h2>Battalion Values</h2>
         <table>
             <tr>
-                <th colspan="3">Good Armies</th>
-                <th colspan="3">Evil Armies</th>
+                <th colspan="2">Good Armies</th>
+                <th colspan="2">Evil Armies</th>
             </tr>
             <tr>
                 <th>Unit</th>
                 <th>Value</th>
-                <th>Image</th>
                 <th>Unit</th>
                 <th>Value</th>
-                <th>Image</th>
             </tr>
             <tr>
                 <td>Elven Archer</td>
                 <td>1 battalion</td>
-                <td><img src="{good_piece_map.get('Elven Archer', '')}" style="max-width: 60px; height: auto;"></td>
                 <td>Orc</td>
                 <td>1 battalion</td>
-                <td><img src="{evil_piece_map.get('Orc', '')}" style="max-width: 60px; height: auto;"></td>
             </tr>
             <tr>
                 <td>Rider of Rohan</td>
                 <td>3 battalions</td>
-                <td><img src="{good_piece_map.get('Rider of Rohan', '')}" style="max-width: 60px; height: auto;"></td>
                 <td>Dark Rider</td>
                 <td>3 battalions</td>
-                <td><img src="{evil_piece_map.get('Dark Rider', '')}" style="max-width: 60px; height: auto;"></td>
             </tr>
             <tr>
                 <td>Eagle</td>
                 <td>5 battalions</td>
-                <td><img src="{good_piece_map.get('Eagle', '')}" style="max-width: 60px; height: auto;"></td>
                 <td>Cave Troll</td>
                 <td>5 battalions</td>
-                <td><img src="{evil_piece_map.get('Cave Troll', '')}" style="max-width: 60px; height: auto;"></td>
             </tr>
         </table>
         
@@ -528,7 +630,24 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
             <p><strong>Strongholds:</strong> +1 reinforcement (counted as part of region, not added)</p>
             <p><strong>Sites of Power:</strong> +2 pts, but only if you control entire region</p>
         </div>
-        
+"""
+    
+    # Add images from relevant pages
+    if include_all_images:
+        for page_num in sorted(images_by_page.keys()):
+            if page_num in [2, 3, 4, 6, 7]:  # Pages with important visual references
+                html += f"""
+        <div class="page-images">
+            <h3>Visual Reference from Page {page_num + 1}</h3>
+            <div class="image-grid">
+"""
+                for idx, path in sorted(images_by_page[page_num]):
+                    html += f'                <img src="{path}" alt="Page {page_num + 1} image {idx}">\n'
+                html += """            </div>
+        </div>
+"""
+    
+    html += """
         <h2>Adventure Cards</h2>
         <ul>
             <li><strong>Mission:</strong> Complete by getting Leader to specified location</li>
@@ -552,234 +671,19 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         </ul>
     </div>
 </body>
-</html>"""
+</html>
+"""
     
-    with open(output_path, 'w') as f:
+    with open(output_path, 'w', encoding='utf-8') as f:
         f.write(html)
     
-    print(f"✓ HTML cheat sheet created: {output_path}")
-
-
-def create_pdf_cheatsheet(output_path: str = "lotr_risk_cheatsheet.pdf"):
-    """Create a PDF version of the cheat sheet - first two pages using PyMuPDF."""
-    piece_paths = segment_composite_images()
-    doc = fitz.open()  # Create new PDF
-    
-    # Page 1
-    page1 = doc.new_page()
-    
-    x, y = 36, 36  # Start position (0.5 inch margins)
-    line_height = 12
-    
-    # Title
-    page1.insert_text((x, y), "RISK: LORD OF THE RINGS", fontsize=16, fontname="helv")
-    y += line_height + 4
-    page1.insert_text((x, y), "QUICK REFERENCE CHEAT SHEET", fontsize=16, fontname="helv")
-    y += line_height * 2
-    
-    # Quick Overview
-    page1.insert_text((x, y), "Quick Rules Overview", fontsize=11, fontname="helv")
-    y += line_height
-    page1.insert_text((x, y), "Players: 2-4  |  Age: 10+", fontsize=9)
-    y += line_height * 1.5
-    
-    # Objective
-    page1.insert_text((x, y), "Objective", fontsize=11, fontname="helv")
-    y += line_height
-    page1.insert_text((x, y), "Score points by controlling territories, regions, and completing", fontsize=9)
-    y += line_height
-    page1.insert_text((x, y), "missions. Don't let the Fellowship reach Mount Doom!", fontsize=9)
-    y += line_height * 1.5
-    
-    # The 8 Steps
-    page1.insert_text((x, y), "The 8 Steps of Your Turn", fontsize=11, fontname="helv")
-    y += line_height
-    steps = [
-        "1. Receive and place reinforcements",
-        "2. Combat (invade other territories)",
-        "3. Fortify your position",
-        "4. Collect a territory card (if you conquered)",
-        "5. Collect an adventure card (if leader conquered)",
-        "6. Replace a leader",
-        "7. Try to find the Ring (EVIL only - if you control Ring's region)",
-        "8. Move the Fellowship"
-    ]
-    for step in steps:
-        page1.insert_text((x + 10, y), step, fontsize=9)
-        y += line_height
-    y += line_height
-    
-    # Reinforcements Table
-    page1.insert_text((x, y), "Reinforcements Table", fontsize=11, fontname="helv")
-    y += line_height + 4
-    
-    table_x = x
-    table_y = y
-    col_width = 100
-    row_height = 16
-    
-    # Header
-    page1.insert_text((table_x, table_y), "Territories", fontsize=8, fontname="helv")
-    page1.insert_text((table_x + col_width, table_y), "Reinforcements", fontsize=8, fontname="helv")
-    
-    # Draw table border
-    page1.draw_rect(fitz.Rect(table_x - 2, table_y - 10, table_x + col_width * 2, table_y + row_height * 6), color=0)
-    
-    # Data rows
-    data = [
-        ("1-11", "3"),
-        ("12-14", "4"),
-        ("15-17", "5"),
-        ("18-20", "6"),
-        ("21+", "÷3, round up")
-    ]
-    
-    for i, (terr, rein) in enumerate(data):
-        row_y = table_y + row_height * (i + 1)
-        page1.insert_text((table_x + 5, row_y), terr, fontsize=8)
-        page1.insert_text((table_x + col_width + 5, row_y), rein, fontsize=8)
-        page1.draw_line(fitz.Point(table_x - 2, row_y + 8), fitz.Point(table_x + col_width * 2, row_y + 8), color=0)
-    
-    y = table_y + row_height * 6 + line_height
-    page1.insert_text((x, y), "Region Control: +7-11 pts per region", fontsize=9)
-    y += line_height
-    page1.insert_text((x, y), "Card Sets: 3 same type→bonus pts; Wild card can substitute", fontsize=9)
-    y += line_height * 1.5
-    
-    # Battalion Values
-    page1.insert_text((x, y), "Battalion Values", fontsize=11, fontname="helv")
-    y += line_height + 4
-    
-    battalion_data = [
-        ("Good Armies", "Value", "Evil Armies", "Value"),
-        ("Elven Archer", "1 battalion", "Orc", "1 battalion"),
-        ("Rider of Rohan", "3 battalions", "Dark Rider", "3 battalions"),
-        ("Eagle", "5 battalions", "Cave Troll", "5 battalions")
-    ]
-    
-    col_width = 70
-    table_y = y
-    
-    for i, row in enumerate(battalion_data):
-        if i == 0:
-            for j, text in enumerate(row):
-                page1.insert_text((x + j * col_width, table_y), text, fontsize=8, fontname="helv")
-        else:
-            for j, text in enumerate(row):
-                page1.insert_text((x + j * col_width, table_y), text, fontsize=8)
-        table_y += row_height
-    
-    # PAGE 2
-    page2 = doc.new_page()
-    
-    x, y = 36, 36
-    
-    # Combat Rules
-    page2.insert_text((x, y), "Combat Rules", fontsize=11, fontname="helv")
-    y += line_height
-    
-    combat_rules = [
-        "Need at least 2 battalions in territory to attack",
-        "Each side rolls 1 die per attacking/defending battalion",
-        "Compare highest die rolls (attacker needs tie to win)",
-        "Winner removes loser's battalion",
-        "Leaders add +1 to combat rolls",
-        "Continue until one side is eliminated"
-    ]
-    
-    for rule in combat_rules:
-        page2.insert_text((x + 10, y), rule, fontsize=9)
-        y += line_height
-    
-    y += line_height
-    
-    # Strongholds & Sites
-    page2.insert_text((x, y), "Strongholds & Sites of Power", fontsize=11, fontname="helv")
-    y += line_height
-    page2.insert_text((x + 10, y), "Strongholds: +1 reinforcement (counted as part of region)", fontsize=9)
-    y += line_height
-    page2.insert_text((x + 10, y), "Sites of Power: +2 pts, only if you control entire region", fontsize=9)
-    y += line_height * 1.5
-    
-    # Adventure Cards
-    page2.insert_text((x, y), "Adventure Cards", fontsize=11, fontname="helv")
-    y += line_height
-    page2.insert_text((x + 10, y), "Mission: Complete by getting Leader to specified location", fontsize=9)
-    y += line_height
-    page2.insert_text((x + 10, y), "Event: Play immediately for effect", fontsize=9)
-    y += line_height
-    page2.insert_text((x + 10, y), "Power: Play during combat for advantage", fontsize=9)
-    y += line_height * 1.5
-    
-    # Scoring
-    page2.insert_text((x, y), "Scoring", fontsize=11, fontname="helv")
-    y += line_height
-    
-    scoring = [
-        "1 point per territory controlled",
-        "2-4 pts per region controlled",
-        "Card bonuses vary by card type",
-        "Leaders completing missions earn points"
-    ]
-    
-    for score in scoring:
-        page2.insert_text((x + 10, y), score, fontsize=9)
-        y += line_height
-    
-    y += line_height
-    
-    # Winning
-    page2.insert_text((x, y), "Winning", fontsize=11, fontname="helv")
-    y += line_height
-    page2.insert_text((x, y), "When Fellowship reaches Mount Doom, roll 1 die:", fontsize=9)
-    y += line_height
-    page2.insert_text((x + 10, y), "3 or less: Fellowship fails, game continues", fontsize=9)
-    y += line_height
-    page2.insert_text((x + 10, y), "4+: Fellowship succeeds, game ends, calculate final scores", fontsize=9)
-    
-    # Save PDF
-    doc.save(output_path)
-    doc.close()
-    print(f"✓ PDF cheat sheet created: {output_path}")
-
-
-def save_blue_text_as_txt(blue_text: list, output_path: str = "blue_text.txt"):
-    """Save collected blue text to a text file."""
-    with open(output_path, 'w') as f:
-        f.write("Blue Text Extracted from PDF:\n\n")
-        f.write("\n".join(blue_text))
-    print(f"✓ Blue text saved as text: {output_path}")
-
-
-def save_blue_text_as_html(blue_text: list, output_path: str = "blue_text.html"):
-    """Save collected blue text to an HTML file."""
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Blue Text from PDF</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 20px; }}
-        .blue-text {{ color: blue; }}
-    </style>
-</head>
-<body>
-    <h1>Blue Text Extracted from PDF</h1>
-    <div class="blue-text">
-        {"<br>".join(blue_text)}
-    </div>
-</body>
-</html>"""
-    with open(output_path, 'w') as f:
-        f.write(html)
-    print(f"✓ Blue text saved as HTML: {output_path}")
+    logger.info(f"✓ HTML cheat sheet created: {output_path}")
 
 
 if __name__ == "__main__":
-    print(f"Source: {SRC}")
-    objects, blue_text = extract_objects(SRC)
+    extract_page_imgs = "--page-images" in sys.argv
+    
+    logger.info(f"Source: {SRC}")
+    objects = extract_objects(SRC, extract_page_images=extract_page_imgs)
     create_cheat_sheet(objects)
-    create_html_cheatsheet(objects)
-    create_pdf_cheatsheet()
-    save_blue_text_as_txt(blue_text)
-    save_blue_text_as_html(blue_text)
+    create_html_cheatsheet(objects, include_all_images=True)
