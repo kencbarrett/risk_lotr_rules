@@ -2,6 +2,7 @@
 """Extract text and images from a PDF into structured objects."""
 import fitz
 import os
+import shutil
 import logging
 import sys
 from dataclasses import dataclass
@@ -243,8 +244,76 @@ def categorize_image(image_obj: ImageObject, page_text: str = "") -> str:
     return "other"
 
 
+def is_image_empty(image_bytes: bytes, filter_empty: bool = True) -> bool:
+    """
+    Check if an image is mostly empty/background using OpenCV.
+    
+    Args:
+        image_bytes: Raw image bytes
+        filter_empty: Whether to actually perform the check (if False, returns False)
+    
+    Returns:
+        True if image appears to be empty/background only
+    """
+    if not filter_empty:
+        return False
+    
+    try:
+        import cv2
+        import numpy as np
+        
+        # Convert bytes to numpy array
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_UNCHANGED)
+        
+        if img is None:
+            return True
+        
+        # Convert to grayscale if needed
+        if len(img.shape) == 3:
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = img
+        
+        # Check variance - low variance means mostly uniform (likely background)
+        variance = np.var(gray)
+        if variance < 10.0:
+            return True
+        
+        # Check for mostly white/light pixels (> 240)
+        light_pixels = np.sum(gray > 240)
+        light_ratio = light_pixels / gray.size
+        if light_ratio > 0.95:
+            return True
+        
+        # Check for mostly dark pixels (< 15)
+        dark_pixels = np.sum(gray < 15)
+        dark_ratio = dark_pixels / gray.size
+        if dark_ratio > 0.95:
+            return True
+        
+        # Use edge detection to check for content
+        edges = cv2.Canny(gray, 50, 100)
+        edge_pixels = np.sum(edges > 0)
+        edge_ratio = edge_pixels / edges.size
+        
+        # If very few edges, likely just background
+        if edge_ratio < 0.05:
+            return True
+        
+        return False
+    except ImportError:
+        # OpenCV not available, skip filtering
+        logger.debug("OpenCV not available, skipping empty image detection")
+        return False
+    except Exception as e:
+        logger.debug(f"Error checking if image is empty: {e}")
+        return False  # Don't filter on error
+
+
 def extract_images(objects: dict, output_dir: str = "cheatsheet_images", 
-                   categorize: bool = False, min_size: int = 50) -> Dict[tuple, str]:
+                   categorize: bool = False, min_size: int = 50,
+                   filter_empty: bool = True, clear_output: bool = True) -> Dict[tuple, str]:
     """
     Extract and save images from PDF to directory.
     
@@ -253,10 +322,17 @@ def extract_images(objects: dict, output_dir: str = "cheatsheet_images",
         output_dir: Output directory for images
         categorize: If True, organize images into subdirectories
         min_size: Minimum width or height in pixels to extract (filters tiny icons)
+        filter_empty: If True, filter out empty/background-only images
+        clear_output: If True, clear output directory before extracting
     
     Returns:
         Dictionary mapping (page_num, idx) to filepath
     """
+    # Clear output directory if requested
+    if clear_output and os.path.exists(output_dir):
+        logger.info(f"Clearing output directory: {output_dir}")
+        shutil.rmtree(output_dir)
+    
     os.makedirs(output_dir, exist_ok=True)
     
     if categorize:
@@ -284,6 +360,11 @@ def extract_images(objects: dict, output_dir: str = "cheatsheet_images",
                 
                 if img_width < min_size and img_height < min_size:
                     logger.debug(f"Skipping tiny image on page {page_num + 1}: {img_width}x{img_height}")
+                    continue
+                
+                # Filter out empty/background-only images
+                if filter_empty and is_image_empty(obj.image_bytes, filter_empty=True):
+                    logger.debug(f"Skipping empty/background image on page {page_num + 1}: {img_width}x{img_height}")
                     continue
                 
                 # Determine file extension
@@ -423,9 +504,9 @@ def create_cheat_sheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.t
 
 
 def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.html",
-                          include_all_images: bool = True):
+                          include_all_images: bool = True, filter_empty: bool = True):
     """Create an HTML version of the cheat sheet with embedded images."""
-    image_paths = extract_images(objects)
+    image_paths = extract_images(objects, filter_empty=filter_empty)
     
     # Collect images by page for better organization
     images_by_page = {}
@@ -680,10 +761,53 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
     logger.info(f"✓ HTML cheat sheet created: {output_path}")
 
 
+def segment_extracted_images(images_dir: str = "cheatsheet_images",
+                            output_dir: str = "segmented_pieces",
+                            min_size: int = 1000,
+                            method: str = "auto",
+                            min_area: int = 500):
+    """
+    Segment composite images into individual pieces.
+    
+    Args:
+        images_dir: Directory containing extracted images
+        output_dir: Directory to save segmented pieces
+        min_size: Minimum dimension to consider as composite
+        method: Segmentation method ("auto", "contour", "color", "grid")
+        min_area: Minimum area for detected pieces
+        filter_empty: If True, filter out empty/background-only images and pieces
+        clear_output: If True, clear output directory before processing
+    """
+    try:
+        from segment_images import segment_all_composites
+        logger.info(f"Segmenting composite images from {images_dir}...")
+        results = segment_all_composites(
+            images_dir,
+            output_dir,
+            min_size=min_size,
+            method=method,
+            min_area=min_area,
+            filter_empty=filter_empty,
+            clear_output=clear_output
+        )
+        logger.info(f"✓ Segmentation complete. Extracted pieces from {len(results)} composites.")
+        return results
+    except ImportError:
+        logger.error("segment_images module not found. Install OpenCV: pip install opencv-python")
+        return {}
+    except Exception as e:
+        logger.error(f"Error during segmentation: {e}")
+        return {}
+
+
 if __name__ == "__main__":
     extract_page_imgs = "--page-images" in sys.argv
+    segment_imgs = "--segment" in sys.argv
     
     logger.info(f"Source: {SRC}")
     objects = extract_objects(SRC, extract_page_images=extract_page_imgs)
     create_cheat_sheet(objects)
     create_html_cheatsheet(objects, include_all_images=True)
+    
+    if segment_imgs:
+        segment_extracted_images()

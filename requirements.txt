@@ -1,0 +1,7 @@
+# Core dependencies for PDF processing
+pymupdf>=1.23.0
+fitz>=0.0.1
+
+# Image segmentation dependencies
+opencv-python>=4.8.0
+numpy>=1.24.0

@@ -6,7 +6,7 @@ __pycache__/
 # C extensions
 *.so
 *.pdf
-
+segmented_pieces/
 # Distribution / packaging
 .Python
 build/
