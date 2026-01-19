@@ -602,6 +602,28 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
             margin: 15px 0; 
             border-radius: 4px;
         }
+        .warning-box {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .critical-box {
+            background: #f8d7da;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        ol ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        ol ol li {
+            margin: 5px 0;
+        }
         .page-images {
             margin: 30px 0;
             padding: 20px;
@@ -621,21 +643,34 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         <p>Score points by controlling territories, regions, and completing missions. Don't let the Fellowship reach Mount Doom!</p>
         
         <h2>The 8 Steps of Your Turn</h2>
+        <div class="critical-box">
+            <p>⚠️ STEP 1 MUST BE DONE FIRST: Reinforce Strongholds (often missed!)</p>
+        </div>
         <ol>
-            <li>Receive and place reinforcements</li>
-            <li>Combat (invade other territories)</li>
-            <li>Fortify your position</li>
-            <li>Collect a territory card (if you conquered)</li>
-            <li>Collect an adventure card (if leader conquered)</li>
-            <li>Replace a leader</li>
-            <li>Try to find the Ring (EVIL only - if you control Ring's region, roll to find it)</li>
-            <li>Move the Fellowship</li>
+            <li><strong>Receive and place reinforcements</strong> (always)
+                <ol type="a">
+                    <li><strong>1a. Reinforce Strongholds</strong> - Place 1 battalion into EACH territory with a stronghold you control (THIS IS FIRST!)</li>
+                    <li><strong>1b. Count Territories</strong> - Divide by 3 (ignore remainder), minimum 3 reinforcements</li>
+                    <li><strong>1c. Add Region Bonuses</strong> - Check gameboard chart for each complete region you control</li>
+                    <li><strong>1d. Turn In Card Sets</strong> - If you have 5+ cards, you MUST turn in a set (see Card Sets table below)</li>
+                    <li><strong>1e. Place ALL Reinforcements</strong> - Place everything gathered above into your territories</li>
+                </ol>
+            </li>
+            <li><strong>Combat</strong> (invade other territories - optional)</li>
+            <li><strong>Fortify your position</strong> (optional - ONE fortification move allowed)</li>
+            <li><strong>Collect a territory card</strong> (if you conquered at least 1 territory)</li>
+            <li><strong>Collect an adventure card</strong> (if your Leader conquered a territory with a Site of Power)</li>
+            <li><strong>Replace a leader</strong> (if you have no Leaders on the board)</li>
+            <li><strong>Try to find the Ring</strong> (EVIL only - see Finding the Ring section below)</li>
+            <li><strong>Move the Fellowship</strong> (see Fellowship Movement section below)</li>
         </ol>
         
-        <h2>Reinforcements Table</h2>
+        <h2>Reinforcements</h2>
+        
+        <h3>Territories Reinforcement Table</h3>
         <table>
             <tr>
-                <th>Territories</th>
+                <th>Territories Controlled</th>
                 <th>Reinforcements</th>
             </tr>
             <tr>
@@ -655,14 +690,102 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
                 <td>6</td>
             </tr>
             <tr>
-                <td>21+</td>
+                <td>21-23</td>
+                <td>7</td>
+            </tr>
+            <tr>
+                <td>24-26</td>
+                <td>8</td>
+            </tr>
+            <tr>
+                <td>27-29</td>
+                <td>9</td>
+            </tr>
+            <tr>
+                <td>30-32</td>
+                <td>10</td>
+            </tr>
+            <tr>
+                <td>33-35</td>
+                <td>11</td>
+            </tr>
+            <tr>
+                <td>36-38</td>
+                <td>12</td>
+            </tr>
+            <tr>
+                <td>39-41</td>
+                <td>13</td>
+            </tr>
+            <tr>
+                <td>42-44</td>
+                <td>14</td>
+            </tr>
+            <tr>
+                <td>45-47</td>
+                <td>15</td>
+            </tr>
+            <tr>
+                <td>48-50</td>
+                <td>16</td>
+            </tr>
+            <tr>
+                <td>51-53</td>
+                <td>17</td>
+            </tr>
+            <tr>
+                <td>54-56</td>
+                <td>18</td>
+            </tr>
+            <tr>
+                <td>57-59</td>
+                <td>19</td>
+            </tr>
+            <tr>
+                <td>60-62</td>
+                <td>20</td>
+            </tr>
+            <tr>
+                <td>63</td>
+                <td>21</td>
+            </tr>
+            <tr>
+                <td>64+</td>
                 <td>÷3, round up</td>
             </tr>
         </table>
-        <ul>
-            <li><strong>Region Control:</strong> +7-11 pts per region</li>
-            <li><strong>Card Sets:</strong> 3 same type→bonus pts; Wild card can substitute</li>
-        </ul>
+        
+        <div class="warning-box">
+            <p><strong>Remember:</strong> Region bonuses are shown on the gameboard chart. Different regions give different bonuses (typically 2-11 reinforcements per complete region).</p>
+        </div>
+        
+        <h3>Card Set Bonuses</h3>
+        <div class="critical-box">
+            <p>⚠️ MANDATORY: If you have 5 or more Territory cards, you MUST turn in a set!</p>
+        </div>
+        <table>
+            <tr>
+                <th>Card Set</th>
+                <th>Bonus Battalions</th>
+            </tr>
+            <tr>
+                <td>3 Elven Archers</td>
+                <td>4</td>
+            </tr>
+            <tr>
+                <td>3 Dark Riders</td>
+                <td>6</td>
+            </tr>
+            <tr>
+                <td>3 Eagles</td>
+                <td>8</td>
+            </tr>
+            <tr>
+                <td>1 Elven Archer + 1 Dark Rider + 1 Eagle</td>
+                <td>10</td>
+            </tr>
+        </table>
+        <p><strong>Wild Cards:</strong> Can substitute for any card type in a set.</p>
         
         <h2>Battalion Values</h2>
         <table>
@@ -698,18 +821,54 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         
         <h2>Combat Rules</h2>
         <ul>
-            <li>Need at least 2 battalions in territory to attack</li>
-            <li>Each side rolls 1 die per attacking/defending battalion</li>
-            <li>Compare highest die rolls (attacker needs tie to win)</li>
-            <li>Winner removes loser's battalion</li>
-            <li>Leaders add +1 to combat rolls</li>
-            <li>Continue until one side is eliminated</li>
+            <li><strong>Attacking Requirements:</strong> Need at least 2 battalions in territory to attack (1 must stay behind to protect territory)</li>
+            <li><strong>Attacking:</strong> Send 1-3 battalions per battle (attacker rolls 1, 2, or 3 dice)</li>
+            <li><strong>Defending:</strong> Defend with 1-2 battalions per battle (defender rolls 1 or 2 dice)</li>
+            <li><strong>Resolving:</strong> Compare highest die to highest die, then next-highest to next-highest</li>
+            <li><strong>Tie Breaker:</strong> Defender wins ties</li>
+            <li><strong>Continue:</strong> Repeat battles until territory is conquered or invasion is called off</li>
         </ul>
+        
+        <h3>Combat Bonuses</h3>
+        <table>
+            <tr>
+                <th>Condition</th>
+                <th>Bonus</th>
+            </tr>
+            <tr>
+                <td>Leader attacking</td>
+                <td>+1 to highest attack die</td>
+            </tr>
+            <tr>
+                <td>Leader defending</td>
+                <td>+1 to higher defense die</td>
+            </tr>
+            <tr>
+                <td>Stronghold defending</td>
+                <td>+1 to higher defense die</td>
+            </tr>
+            <tr>
+                <td>Leader + Stronghold defending</td>
+                <td>+2 to higher defense die</td>
+            </tr>
+        </table>
+        <div class="info-box">
+            <p><strong>Important:</strong> Bonuses are only added to the highest/higher die roll, not to all dice. Leader bonuses apply only when the Leader is in combat.</p>
+        </div>
         
         <h2>Strongholds & Sites of Power</h2>
         <div class="info-box">
-            <p><strong>Strongholds:</strong> +1 reinforcement (counted as part of region, not added)</p>
-            <p><strong>Sites of Power:</strong> +2 pts, but only if you control entire region</p>
+            <p><strong>Strongholds:</strong></p>
+            <ul>
+                <li>Place 1 battalion into each stronghold territory at the START of your turn (Step 1a)</li>
+                <li>Provide +1 to higher defense die when defending</li>
+                <li>Worth 2 points at game end (scoring)</li>
+            </ul>
+            <p><strong>Sites of Power:</strong></p>
+            <ul>
+                <li>Worth 2 points at game end, but only if you control the entire region</li>
+                <li>Conquering a Site of Power with a Leader allows you to draw an Adventure card</li>
+            </ul>
         </div>
 """
     
@@ -729,27 +888,107 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
 """
     
     html += """
+        <h2>Leaders</h2>
+        <div class="info-box">
+            <ul>
+                <li><strong>Movement:</strong> Leaders move WITH battalions (cannot move alone)</li>
+                <li><strong>Combat:</strong> Add +1 to highest attack die or higher defense die (only when in combat)</li>
+                <li><strong>After Conquering:</strong> If Leader was used to conquer a territory, the Leader must move into that territory</li>
+                <li><strong>Leader Elimination:</strong> If the last battalion in a territory with a Leader is defeated, the Leader is removed</li>
+                <li><strong>Passing Through:</strong> A Leader can pass through a territory containing your other Leader, but cannot end in the same territory</li>
+                <li><strong>Replacement:</strong> If you have no Leaders on the board, place one in any of your territories (Step 6)</li>
+            </ul>
+        </div>
+        
         <h2>Adventure Cards</h2>
         <ul>
-            <li><strong>Mission:</strong> Complete by getting Leader to specified location</li>
-            <li><strong>Event:</strong> Play immediately for effect</li>
-            <li><strong>Power:</strong> Play during combat for advantage</li>
+            <li><strong>Mission Cards:</strong> Complete by getting your Leader to the Site of Power listed on the card. Keep completed cards for scoring.</li>
+            <li><strong>Event Cards:</strong> Say "Play Immediately" - must be played when drawn. See Event Card Handling below.</li>
+            <li><strong>Power Cards:</strong> Play during combat (or sometimes during other players' turns) for advantages. Keep played cards for scoring.</li>
         </ul>
         
-        <h2>Scoring</h2>
+        <h3>Event Card Handling (Step 5)</h3>
+        <div class="warning-box">
+            <p>When you draw an Adventure card after conquering a Site of Power:</p>
+            <ol>
+                <li>If it's an Event card (says "Play Immediately"), play it immediately</li>
+                <li>Draw another Adventure card</li>
+                <li>Continue playing Event cards and drawing until you get a Mission or Power card</li>
+                <li>Add the Mission or Power card to your hand</li>
+                <li>If you now have more than 4 Adventure cards, discard one (your choice)</li>
+            </ol>
+            <p><strong>Important:</strong> After a Mission or Power card is drawn, no more Adventure cards can be played that turn.</p>
+        </div>
+        
+        <h2>Scoring Points</h2>
+        <table>
+            <tr>
+                <th>Item</th>
+                <th>Points</th>
+            </tr>
+            <tr>
+                <td>Each territory controlled</td>
+                <td>1 point</td>
+            </tr>
+            <tr>
+                <td>Each stronghold controlled</td>
+                <td>2 points</td>
+            </tr>
+            <tr>
+                <td>Each complete region controlled</td>
+                <td>Equal to that region's battalion bonus (check gameboard chart)</td>
+            </tr>
+            <tr>
+                <td>Each Site of Power controlled</td>
+                <td>2 points (only if you control the entire region)</td>
+            </tr>
+            <tr>
+                <td>Adventure cards played</td>
+                <td>Points indicated on the card (cards in hand don't count)</td>
+            </tr>
+        </table>
+        <div class="info-box">
+            <p><strong>Note:</strong> Only Adventure cards that have been played (Mission cards completed, Power cards used) count for scoring. Cards still in your hand do not count.</p>
+        </div>
+        
+        <h2>Finding the Ring (Step 7 - EVIL Only)</h2>
+        <div class="critical-box">
+            <p><strong>When:</strong> Just before moving the Fellowship (Step 8), if The One Ring is in a territory controlled by an evil player.</p>
+        </div>
         <ul>
-            <li>1 point per territory controlled</li>
-            <li>2-4 pts per region controlled</li>
-            <li>Card bonuses vary by card type</li>
-            <li>Leaders completing missions earn points</li>
+            <li><strong>Roll:</strong> The evil player who controls the territory rolls 2 dice (any color)</li>
+            <li><strong>Bonuses:</strong>
+                <ul>
+                    <li>+1 if controlling the entire region where the Ring is located</li>
+                    <li>+1 if your Leader is in the territory with the Ring</li>
+                    <li>+2 if both conditions (control entire region AND Leader present)</li>
+                </ul>
+            </li>
+            <li><strong>Success:</strong> If the total (dice roll + bonuses) is 12 or higher, The One Ring is found and evil instantly wins!</li>
         </ul>
         
-        <h2>Winning</h2>
-        <p>When Fellowship reaches Mount Doom, roll 1 die:</p>
+        <h2>Moving the Fellowship (Step 8)</h2>
+        <div class="info-box">
+            <p><strong>Normal Movement:</strong> Move The One Ring (Fellowship) 1 territory along the dotted path.</p>
+            <p><strong>DIE Symbol Territories:</strong> If the Ring is currently on a territory with a DIE symbol:</p>
+            <ul>
+                <li>You MUST roll 1 die before moving</li>
+                <li><strong>Roll > 3:</strong> Move to the next territory on the path</li>
+                <li><strong>Roll ≤ 3:</strong> The Fellowship stays in the current territory (try again next turn)</li>
+                <li>The Fellowship will remain in this territory until a successful roll is made</li>
+            </ul>
+        </div>
+        
+        <h2>Winning the Game</h2>
+        <p><strong>When the Fellowship reaches Mount Doom:</strong></p>
         <ul>
-            <li><strong>3 or less:</strong> Fellowship fails, game continues</li>
-            <li><strong>4+:</strong> Fellowship succeeds, game ends, calculate final scores</li>
+            <li>Make a final die roll to destroy The One Ring</li>
+            <li><strong>Roll > 3:</strong> The One Ring is destroyed - game ends, calculate final scores</li>
+            <li><strong>Roll ≤ 3:</strong> The Fellowship has not destroyed The One Ring - game continues</li>
+            <li>Each player, at the end of their turn, rolls to destroy The One Ring until successful</li>
+            <li><strong>Alternative Win:</strong> Evil can win by finding The One Ring (see Finding the Ring above)</li>
         </ul>
+        <p><strong>Winner:</strong> Player with the highest score wins!</p>
     </div>
 </body>
 </html>
