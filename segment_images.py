@@ -5,12 +5,13 @@ Image segmentation module for extracting individual pieces from composite images
 Uses OpenCV to detect and extract individual game pieces/icons from composite images
 that contain multiple pieces arranged together.
 """
+import json
 import os
 import shutil
 import cv2
 import numpy as np
 import logging
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict, Any
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -40,7 +41,7 @@ def is_empty_image(image: np.ndarray, background_threshold: float = 0.95,
         gray = image
     
     # Check variance - low variance means mostly uniform (likely background)
-    variance = np.var(gray)
+    variance = np.var(gray.astype(np.float64))
     if variance < variance_threshold:
         return True
     
@@ -108,7 +109,7 @@ def has_meaningful_content(image: np.ndarray, min_content_ratio: float = 0.05,
     edge_ratio = edge_pixels / edges.size
     
     # If very few edges, likely just background
-    return edge_ratio >= min_content_ratio
+    return bool(edge_ratio >= min_content_ratio)
 
 
 def is_background_only(image_path: str, background_threshold: float = 0.95) -> bool:
@@ -168,143 +169,203 @@ def is_composite_image(image_path: str, min_size: int = 1000) -> bool:
         logger.warning(f"Error checking composite status for {image_path}: {e}")
         return False
 
-
 def detect_pieces_contour(image: np.ndarray, min_area: int = 500, 
-                         max_area: Optional[int] = None) -> List[Tuple[int, int, int, int]]:
+                         max_area: Optional[int] = None,
+                         debug_dir: Optional[str] = None) -> List[Tuple[int, int, int, int]]:
     """
-    Detect individual pieces using contour detection.
-    
-    Args:
-        image: Input image as numpy array (BGR format)
-        min_area: Minimum contour area to consider as a piece
-        max_area: Maximum contour area (None for no limit)
-    
-    Returns:
-        List of bounding boxes as (x, y, width, height)
+    Improved contour detection:
+      - CLAHE contrast boost
+      - bilateral filter to preserve edges
+      - adaptive threshold with block size proportional to image size
+      - Canny edges merged with threshold contours
+      - area filtering relative to image area
+      - optional debug output (gray, thresh, edges, merged)
     """
-    # Convert to grayscale
+    h, w = image.shape[:2]
+    img_area = float(max(1, h * w))
+
+    # Grayscale + contrast
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
-    # Apply threshold to create binary image
-    # Use adaptive threshold for better results with varying lighting
+    clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+    gray = clahe.apply(gray)
+
+    # Denoise but keep edges
+    denoised = cv2.bilateralFilter(gray, d=9, sigmaColor=75, sigmaSpace=75)
+
+    # Adaptive threshold with block size proportional to image
+    block = max(11, (min(h, w) // 40) | 1)  # odd block size
     thresh = cv2.adaptiveThreshold(
-        gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
-        cv2.THRESH_BINARY_INV, 11, 2
+        denoised, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+        cv2.THRESH_BINARY_INV, block, 7
     )
-    
-    # Alternative: Use Otsu's threshold if adaptive doesn't work well
-    # _, thresh = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    
-    # Morphological operations to clean up the image
-    kernel = np.ones((3, 3), np.uint8)
+
+    # Morphology sized for image
+    ksize = max(3, (min(h, w) // 300) | 1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksize, ksize))
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel, iterations=2)
     thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=1)
-    
-    # Find contours
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
+
+    # Canny edges -> dilate to join small gaps
+    edges = cv2.Canny(denoised, 50, 150)
+    ed_k = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    edges = cv2.dilate(edges, ed_k, iterations=1)
+
+    # Merge masks (threshold + edges) to catch both filled and outline-only pieces
+    merged = cv2.bitwise_or(thresh, edges)
+
+    # Find contours on merged mask
+    contours, _ = cv2.findContours(merged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
     bounding_boxes = []
+    # min_area relative to image area if not huge absolute
+    rel_min_area = max(min_area, int(img_area * 0.0004))  # tune this fraction if needed
+
     for contour in contours:
         area = cv2.contourArea(contour)
-        if area < min_area:
+        if area < rel_min_area:
             continue
         if max_area and area > max_area:
             continue
-        
-        # Get bounding box
-        x, y, w, h = cv2.boundingRect(contour)
-        
-        # Filter out very thin or very wide boxes (likely not pieces)
-        aspect_ratio = w / h if h > 0 else 0
-        if aspect_ratio < 0.1 or aspect_ratio > 10:
-            continue
-        
-        bounding_boxes.append((x, y, w, h))
-    
-    return bounding_boxes
 
+        x, y, wbox, hbox = cv2.boundingRect(contour)
+        aspect_ratio = wbox / hbox if hbox > 0 else 0
+        if aspect_ratio < 0.08 or aspect_ratio > 12:
+            continue
+
+        # pad box a bit
+        pad = max(4, int(min(h, w) * 0.01))
+        x0 = max(0, x - pad)
+        y0 = max(0, y - pad)
+        x1 = min(image.shape[1], x + wbox + pad)
+        y1 = min(image.shape[0], y + hbox + pad)
+        bounding_boxes.append((x0, y0, x1 - x0, y1 - y0))
+
+    # Optionally write debug images
+    if debug_dir:
+        os.makedirs(debug_dir, exist_ok=True)
+        cv2.imwrite(os.path.join(debug_dir, "gray.png"), gray)
+        cv2.imwrite(os.path.join(debug_dir, "thresh.png"), thresh)
+        cv2.imwrite(os.path.join(debug_dir, "edges.png"), edges)
+        cv2.imwrite(os.path.join(debug_dir, "merged.png"), merged)
+
+    # Sort left->right, top->down for deterministic output
+    bounding_boxes = sorted(bounding_boxes, key=lambda b: (b[1], b[0]))
+    return bounding_boxes
 
 def detect_pieces_color_based(image: np.ndarray, min_area: int = 500) -> List[Tuple[int, int, int, int]]:
     """
-    Detect pieces using color-based segmentation.
-    Useful for images with distinct colored pieces (e.g., gold vs red pieces).
-    
-    Args:
-        image: Input image as numpy array (BGR format)
-        min_area: Minimum area to consider as a piece
-    
-    Returns:
-        List of bounding boxes as (x, y, width, height)
+    Detect pieces that sit on a mostly-uniform colored background (e.g. the blue columns).
+    - Auto-detects dominant hue from page borders
+    - Masks the background hue, inverts to get foreground icons
+    - Morphological cleaning and contour filtering by area/aspect
     """
-    # Convert to HSV for better color segmentation
+    h, w = image.shape[:2]
+    img_area = float(max(1, h * w))
+
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
-    
-    # Create mask for non-white/transparent areas
-    # Assuming pieces are on white/light background
-    lower_white = np.array([0, 0, 200])
-    upper_white = np.array([180, 30, 255])
-    mask = cv2.inRange(hsv, lower_white, upper_white)
-    mask = cv2.bitwise_not(mask)  # Invert to get non-white areas
-    
-    # Clean up mask
-    kernel = np.ones((5, 5), np.uint8)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+    v = hsv[:, :, 2]
+    s = hsv[:, :, 1]
+    hue = hsv[:, :, 0]
+
+    # sample left/right border strips to find dominant background hue
+    strip_w = max(10, w // 12)
+    samples = np.concatenate([
+        hsv[:, :strip_w, :].reshape(-1, 3),
+        hsv[:, -strip_w:, :].reshape(-1, 3)
+    ], axis=0)
+    # filter low-saturation/value pixels
+    sat_val_mask = (samples[:, 1] > 30) & (samples[:, 2] > 30)
+    if np.any(sat_val_mask):
+        dominant_hue = int(np.median(samples[sat_val_mask, 0].astype(np.float64)))
+    else:
+        dominant_hue = int(np.median(samples[:, 0].astype(np.float64)))
+
+    delta = 12  # hue tolerance
+    lower = np.array([max(0, dominant_hue - delta), 30, 20], dtype=np.uint8)
+    upper = np.array([min(179, dominant_hue + delta), 255, 255], dtype=np.uint8)
+
+    bg_mask = cv2.inRange(hsv, lower, upper)
+    fg_mask = cv2.bitwise_not(bg_mask)
+
+    # remove very dark/very light noise: require some brightness
+    bright_mask = (v > 25).astype(np.uint8) * 255
+    mask = cv2.bitwise_and(fg_mask, bright_mask)
+
+    # morphological cleanup (sizes proportional to image)
+    ksize = max(3, (min(h, w) // 300) | 1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (ksize, ksize))
     mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel, iterations=1)
-    
-    # Find contours
+    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+
+    # find contours
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    bounding_boxes = []
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if area < min_area:
+    boxes: List[Tuple[int, int, int, int]] = []
+
+    rel_min_area = max(min_area, int(img_area * 0.00015))
+    for c in contours:
+        area = cv2.contourArea(c)
+        if area < rel_min_area:
             continue
-        
-        x, y, w, h = cv2.boundingRect(contour)
-        
-        # Filter by aspect ratio
-        aspect_ratio = w / h if h > 0 else 0
-        if aspect_ratio < 0.2 or aspect_ratio > 5:
+        x, y, ww, hh = cv2.boundingRect(c)
+        ar = ww / float(hh + 1e-6)
+        if ar < 0.06 or ar > 15:
             continue
-        
-        bounding_boxes.append((x, y, w, h))
-    
-    return bounding_boxes
+        pad = max(4, int(min(h, w) * 0.008))
+        x0 = max(0, x - pad); y0 = max(0, y - pad)
+        x1 = min(image.shape[1], x + ww + pad); y1 = min(image.shape[0], y + hh + pad)
+        boxes.append((x0, y0, x1 - x0, y1 - y0))
+
+    # sort top->down then left->right (good for vertical icon columns)
+    boxes = sorted(boxes, key=lambda b: (b[1], b[0]))
+    return boxes
 
 
 def detect_pieces_grid(image: np.ndarray, expected_rows: Optional[int] = None,
                        expected_cols: Optional[int] = None) -> List[Tuple[int, int, int, int]]:
     """
-    Detect pieces arranged in a regular grid pattern.
-    
-    Args:
-        image: Input image as numpy array
-        expected_rows: Expected number of rows (None for auto-detect)
-        expected_cols: Expected number of columns (None for auto-detect)
-    
-    Returns:
-        List of bounding boxes as (x, y, width, height)
+    Fallback grid detector: use color-based mask first, then try to detect
+    regularly spaced items by analyzing vertical projections if a column is detected.
     """
-    height, width = image.shape[:2]
-    
-    # Use contour detection first to find approximate grid
-    boxes = detect_pieces_contour(image, min_area=1000)
-    
-    if len(boxes) < 2:
+    # try color-based first
+    boxes = detect_pieces_color_based(image, min_area=200)
+    if boxes:
         return boxes
-    
-    # Group boxes by approximate row/column positions
-    # Simple approach: sort by y-coordinate for rows, then x for columns
-    boxes_sorted = sorted(boxes, key=lambda b: (b[1], b[0]))
-    
-    # If we have expected dimensions, try to fit them
-    if expected_rows and expected_cols:
-        if len(boxes_sorted) >= expected_rows * expected_cols:
-            # Take the first N boxes that fit the grid
-            boxes_sorted = boxes_sorted[:expected_rows * expected_cols]
-    
-    return boxes_sorted
 
+    # fallback: projection-based grid detection
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
+    th = cv2.adaptiveThreshold(blur, 255, cv2.ADAPTIVE_THRESH_MEAN_C,
+                               cv2.THRESH_BINARY_INV, 31, 10)
+
+    # vertical projection
+    vert_proj = np.sum(th, axis=1)
+    # normalize and find peaks
+    norm = (vert_proj - vert_proj.min()) / (vert_proj.ptp() + 1e-6)
+    peaks = np.where(norm > 0.25)[0]
+
+    boxes_out: List[Tuple[int, int, int, int]] = []
+    if peaks.size > 0:
+        # group consecutive rows into bands
+        groups = np.split(peaks, np.where(np.diff(peaks) != 1)[0] + 1)
+        for g in groups:
+            y0 = max(0, int(g[0] - 6))
+            y1 = min(image.shape[0], int(g[-1] + 6))
+            # horizontal crop and find contours to localize item
+            crop = th[y0:y1, :]
+            cnts, _ = cv2.findContours(crop, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            for c in cnts:
+                x, y, ww, hh = cv2.boundingRect(c)
+                area = ww * hh
+                if area < 200:
+                    continue
+                pad = 4
+                boxes_out.append((x - pad, y0 + y - pad, ww + 2 * pad, hh + 2 * pad))
+        boxes_out = [(max(0, x), max(0, y), min(image.shape[1] - x, w), min(image.shape[0] - y, h))
+                     for (x, y, w, h) in boxes_out]
+
+    # final sort and return
+    boxes_final = sorted(boxes_out, key=lambda b: (b[1], b[0]))
+    return boxes_final
 
 def extract_piece(image: np.ndarray, bbox: Tuple[int, int, int, int], 
                  padding: int = 5) -> np.ndarray:
@@ -357,32 +418,59 @@ def is_valid_piece(piece: np.ndarray, min_content_ratio: float = 0.05) -> bool:
     return has_meaningful_content(piece, min_content_ratio=min_content_ratio)
 
 
+# Helper functions for merging boxes found by multiple detectors
+def _offset_boxes(boxes: List[Tuple[int,int,int,int]], dx: int, dy: int = 0) -> List[Tuple[int,int,int,int]]:
+    return [(x + dx, y + dy, w, h) for (x, y, w, h) in boxes]
+
+
+def _box_iou(a: Tuple[int,int,int,int], b: Tuple[int,int,int,int]) -> float:
+    ax, ay, aw, ah = a; bx, by, bw, bh = b
+    ax1, ay1, ax2, ay2 = ax, ay, ax + aw, ay + ah
+    bx1, by1, bx2, by2 = bx, by, bx + bw, by + bh
+    ix1, iy1 = max(ax1, bx1), max(ay1, by1)
+    ix2, iy2 = min(ax2, bx2), min(ay2, by2)
+    iw, ih = max(0, ix2 - ix1), max(0, iy2 - iy1)
+    inter = iw * ih
+    union = aw * ah + bw * bh - inter
+    return inter / union if union > 0 else 0.0
+
+
+def _add_unique_boxes(existing: List[Tuple[int,int,int,int]],
+                      new: List[Tuple[int,int,int,int]],
+                      iou_thresh: float = 0.25) -> List[Tuple[int,int,int,int]]:
+    out = list(existing)
+    for nb in new:
+        skip = False
+        for eb in out:
+            if _box_iou(nb, eb) > iou_thresh:
+                skip = True
+                break
+        if not skip:
+            out.append(nb)
+    return out
+
+
 def segment_composite_image(image_path: str, output_dir: str,
                            method: str = "auto",
                            min_area: int = 500,
                            padding: int = 5,
                            filter_empty: bool = True,
-                           clear_output: bool = True) -> List[str]:
+                           clear_output: bool = True,
+                           emit_manifest: bool = True) -> Tuple[List[str], List[Dict[str, Any]]]:
     """
     Segment a composite image into individual pieces.
-    
-    Args:
-        image_path: Path to the composite image
-        output_dir: Directory to save extracted pieces
-        method: Segmentation method ("contour", "color", "grid", or "auto")
-        min_area: Minimum area for a detected piece
-        padding: Padding around each extracted piece
-        filter_empty: If True, filter out empty/background-only pieces
-        clear_output: If True, clear output directory before extracting
-    
-    Returns:
-        List of paths to extracted piece images
+
+    NOTE: in "auto" mode this now:
+      - runs contour detection
+      - always runs color-based detection on left/right page border strips
+        (useful for blue columns containing Strongholds / Sites of Power)
+      - merges unique boxes (avoids duplicates) before extraction
     """
     # Load image
     image = cv2.imread(image_path)
     if image is None:
         logger.error(f"Failed to load image: {image_path}")
-        return []
+        return ([], [])
     
     height, width = image.shape[:2]
     logger.info(f"Processing {os.path.basename(image_path)} ({width}x{height})")
@@ -396,12 +484,27 @@ def segment_composite_image(image_path: str, output_dir: str,
     os.makedirs(output_dir, exist_ok=True)
     
     # Detect pieces based on method
+    boxes: List[Tuple[int,int,int,int]] = []
     if method == "auto":
-        # Try contour detection first
+        # Try contour detection first (good for center artwork / pieces)
         boxes = detect_pieces_contour(image, min_area=min_area)
+        # Always also try color-based detection on left/right strips to catch column icons
+        strip_w = max(40, width // 10)
+        left_strip = image[:, :strip_w]
+        right_strip = image[:, -strip_w:]
+        # use a smaller min_area for strip detection (icons are smaller)
+        strip_min_area = max(100, int(min_area * 0.3))
+        left_boxes = detect_pieces_color_based(left_strip, min_area=strip_min_area)
+        right_boxes = detect_pieces_color_based(right_strip, min_area=strip_min_area)
+        # offset right boxes to page coords
+        right_boxes = _offset_boxes(right_boxes, dx=width - strip_w)
+        # left boxes already in page coords (dx=0)
+        # merge without duplicating existing boxes
+        boxes = _add_unique_boxes(boxes, left_boxes)
+        boxes = _add_unique_boxes(boxes, right_boxes)
         if len(boxes) < 2:
-            # Fall back to color-based if contour doesn't find much
-            logger.info("Contour detection found few pieces, trying color-based...")
+            # If nothing found, try whole-image color-based fallback
+            logger.info("Few pieces found; trying full-image color-based detection...")
             boxes = detect_pieces_color_based(image, min_area=min_area)
     elif method == "contour":
         boxes = detect_pieces_contour(image, min_area=min_area)
@@ -415,16 +518,19 @@ def segment_composite_image(image_path: str, output_dir: str,
     
     if len(boxes) == 0:
         logger.warning(f"No pieces detected in {image_path}")
-        return []
+        return ([], [])
     
     logger.info(f"Detected {len(boxes)} potential pieces")
     
     # Extract base filename
     base_name = Path(image_path).stem
-    
+    composite_id = base_name
+
     # Extract and save each piece
     extracted_paths = []
+    manifest_entries = []
     skipped_count = 0
+    piece_index = 0
     for idx, bbox in enumerate(boxes):
         piece = extract_piece(image, bbox, padding=padding)
         
@@ -435,28 +541,42 @@ def segment_composite_image(image_path: str, output_dir: str,
             logger.debug(f"  Skipped empty piece {idx + 1}: {w}x{h} at ({x}, {y})")
             continue
         
+        piece_index += 1
         # Generate output filename
-        output_filename = f"{base_name}_piece_{idx + 1:03d}.png"
+        output_filename = f"{base_name}_piece_{piece_index:03d}.png"
         output_path = os.path.join(output_dir, output_filename)
         
         # Save piece
         cv2.imwrite(output_path, piece)
         extracted_paths.append(output_path)
+
+        if emit_manifest:
+            try:
+                path_rel = os.path.relpath(output_path)
+            except ValueError:
+                path_rel = output_path
+            manifest_entries.append({
+                "composite_id": composite_id,
+                "piece_index": piece_index,
+                "path": path_rel,
+            })
         
         x, y, w, h = bbox
-        logger.debug(f"  Extracted piece {idx + 1}: {w}x{h} at ({x}, {y})")
+        logger.debug(f"  Extracted piece {piece_index}: {w}x{h} at ({x}, {y})")
     
     if skipped_count > 0:
         logger.info(f"Skipped {skipped_count} empty/background pieces")
     logger.info(f"✓ Extracted {len(extracted_paths)} valid pieces to {output_dir}")
-    return extracted_paths
+    return (extracted_paths, manifest_entries)
 
 
 def segment_all_composites(input_dir: str, output_dir: str,
                           min_size: int = 1000,
                           method: str = "auto",
                           min_area: int = 500,
-                          filter_empty: bool = True) -> dict:
+                          filter_empty: bool = True,
+                          clear_output: bool = True,
+                          emit_manifest: bool = True) -> dict:
     """
     Segment all composite images in a directory.
     
@@ -467,46 +587,62 @@ def segment_all_composites(input_dir: str, output_dir: str,
         method: Segmentation method to use
         min_area: Minimum area for detected pieces
         filter_empty: If True, filter out empty/background-only pieces
+        clear_output: If True, clear output directory before processing
+        emit_manifest: If True, write manifest.json to output_dir
     
     Returns:
         Dictionary mapping input image paths to lists of extracted piece paths
     """
+    if clear_output and os.path.exists(output_dir):
+        logger.info(f"Clearing output directory: {output_dir}")
+        shutil.rmtree(output_dir)
+
     results = {}
-    
+    all_manifest_entries = []
+
     # Find all image files
     image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.tiff'}
     image_files = [
         f for f in os.listdir(input_dir)
         if Path(f).suffix.lower() in image_extensions
     ]
-    
+
     logger.info(f"Found {len(image_files)} images in {input_dir}")
-    
+
     for filename in sorted(image_files):
         image_path = os.path.join(input_dir, filename)
-        
+
         # Check if it's likely a composite
         if not is_composite_image(image_path, min_size=min_size):
             logger.debug(f"Skipping {filename} (not a composite)")
             continue
-        
+
         # Create subdirectory for this composite's pieces
         base_name = Path(filename).stem
         composite_output_dir = os.path.join(output_dir, base_name)
-        
+
         # Segment the composite
-        extracted = segment_composite_image(
+        extracted_paths, manifest_entries = segment_composite_image(
             image_path,
             composite_output_dir,
             method=method,
             min_area=min_area,
             filter_empty=filter_empty,
-            clear_output=clear_output  # Clear each composite's subdirectory
+            clear_output=clear_output,
+            emit_manifest=emit_manifest,
         )
-        
-        if extracted:
-            results[image_path] = extracted
-    
+
+        if extracted_paths:
+            results[image_path] = extracted_paths
+            if emit_manifest and manifest_entries:
+                all_manifest_entries.extend(manifest_entries)
+
+    if emit_manifest and all_manifest_entries:
+        manifest_path = os.path.join(output_dir, "manifest.json")
+        with open(manifest_path, "w", encoding="utf-8") as f:
+            json.dump(all_manifest_entries, f, indent=2)
+        logger.info(f"Wrote manifest: {manifest_path}")
+
     logger.info(f"✓ Processed {len(results)} composite images")
     return results
 
@@ -545,26 +681,48 @@ if __name__ == "__main__":
         help="Minimum area for detected pieces (default: 500)"
     )
     parser.add_argument(
+        "--no-filter-empty",
+        action="store_true",
+        help="Do not filter out empty/background-only pieces"
+    )
+    parser.add_argument(
+        "--no-clear",
+        action="store_true",
+        help="Do not clear output directory before processing"
+    )
+    parser.add_argument(
+        "--no-manifest",
+        action="store_true",
+        help="Do not write manifest.json (default: write manifest)"
+    )
+    parser.add_argument(
         "--single",
         help="Process a single image file instead of directory"
     )
-    
+
     args = parser.parse_args()
-    
+
     filter_empty = not args.no_filter_empty
     clear_output = not args.no_clear
-    
+    emit_manifest = not args.no_manifest
+
     if args.single:
         # Process single image
         output_dir = os.path.join(args.output, Path(args.single).stem)
-        segment_composite_image(
+        extracted_paths, manifest_entries = segment_composite_image(
             args.single,
             output_dir,
             method=args.method,
             min_area=args.min_area,
             filter_empty=filter_empty,
-            clear_output=clear_output
+            clear_output=clear_output,
+            emit_manifest=emit_manifest,
         )
+        if emit_manifest and manifest_entries:
+            manifest_path = os.path.join(output_dir, "manifest.json")
+            with open(manifest_path, "w", encoding="utf-8") as f:
+                json.dump(manifest_entries, f, indent=2)
+            logger.info(f"Wrote manifest: {manifest_path}")
     else:
         # Process directory
         segment_all_composites(
@@ -574,5 +732,6 @@ if __name__ == "__main__":
             method=args.method,
             min_area=args.min_area,
             filter_empty=filter_empty,
-            clear_output=clear_output
+            clear_output=clear_output,
+            emit_manifest=emit_manifest,
         )

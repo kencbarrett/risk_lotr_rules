@@ -1,0 +1,13 @@
+{
+  "_schema": "Composite ID (e.g. page1_img7_10) -> { piece_index (1-based string) -> semantic label }. Labels for Battalion table: elven_archer, rider_of_rohan, eagle, orc, dark_rider, cave_troll. Optional: leader_shield, site_of_power, other.",
+  "page1_img7_10": {
+    "1": "elven_archer",
+    "2": "rider_of_rohan",
+    "3": "eagle",
+    "4": "orc",
+    "5": "dark_rider",
+    "6": "cave_troll",
+    "7": "leader_shield",
+    "8": "leader_shield"
+  }
+}

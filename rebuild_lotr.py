@@ -130,9 +130,9 @@ def extract_objects(src_path: str, extract_page_images: bool = False) -> dict:
                     
                     if xref and xref not in seen_xrefs:
                         img_info = src.extract_image(xref)
-                        img_bytes = img_info.get("image")
+                        img_bytes = img_info.get("image") if img_info else None
                         
-                        if img_bytes:
+                        if img_bytes is not None:
                             seen_xrefs.add(xref)
                             page_objects.append(ImageObject(
                                 image_bytes=img_bytes,
@@ -156,9 +156,8 @@ def extract_objects(src_path: str, extract_page_images: bool = False) -> dict:
                 
                 try:
                     img_info = src.extract_image(xref)
-                    if img_info and img_info.get("image"):
-                        img_bytes = img_info.get("image")
-                        
+                    img_bytes = img_info.get("image") if img_info else None
+                    if img_bytes is not None:
                         # Try to find bbox from text dict if available
                         found_bbox = None
                         for b in pd.get("blocks", []):
@@ -181,9 +180,9 @@ def extract_objects(src_path: str, extract_page_images: bool = False) -> dict:
                             bbox=found_bbox,
                             xref=xref,
                             page_num=pno,
-                            width=img_info.get("width"),
-                            height=img_info.get("height"),
-                            ext=img_info.get("ext", "jpg")
+                            width=img_info.get("width") if img_info else None,
+                            height=img_info.get("height") if img_info else None,
+                            ext=img_info.get("ext", "jpg") if img_info else "jpg"
                         ))
                 except Exception as e:
                     logger.warning(f"Page {pno + 1}: Failed to extract image xref {xref}: {e}")
@@ -276,7 +275,7 @@ def is_image_empty(image_bytes: bytes, filter_empty: bool = True) -> bool:
             gray = img
         
         # Check variance - low variance means mostly uniform (likely background)
-        variance = np.var(gray)
+        variance = np.var(gray.astype(np.float64))
         if variance < 10.0:
             return True
         
@@ -1004,7 +1003,9 @@ def segment_extracted_images(images_dir: str = "cheatsheet_images",
                             output_dir: str = "segmented_pieces",
                             min_size: int = 1000,
                             method: str = "auto",
-                            min_area: int = 500):
+                            min_area: int = 500,
+                            filter_empty: bool = True,
+                            clear_output: bool = True) -> Dict[str, List[str]]:
     """
     Segment composite images into individual pieces.
     
