@@ -27,7 +27,14 @@ BATTALION_LABELS = {
 
 
 def load_manifest(manifest_path: str) -> List[Dict[str, Any]]:
-    """Load manifest.json; return list of {composite_id, piece_index, path}."""
+    """Load manifest.json.
+
+    Returns:
+        List of entries. Each entry should include:
+          - composite_id
+          - piece_index
+          - piece_path (preferred) or path (legacy)
+    """
     with open(manifest_path, encoding="utf-8") as f:
         data = json.load(f)
     if not isinstance(data, list):
@@ -69,7 +76,8 @@ def resolve_labels(
     for entry in manifest_entries:
         composite_id = entry.get("composite_id")
         piece_index = entry.get("piece_index")
-        path = entry.get("path")
+        # Prefer the new field name; fall back to legacy `path`
+        path = entry.get("piece_path") or entry.get("path")
         if not composite_id or piece_index is None or not path:
             continue
         comp_labels = piece_labels.get(composite_id)

@@ -36,7 +36,12 @@ Add a new function `segment_composite_images()` that:
 2. Detects whether it's a composite
 3. Segments into individual pieces
 4. Saves each piece with a descriptive name or sequential numbering
-5. Optionally generates a manifest mapping piece locations to source composite
+5. Generates a manifest mapping piece locations to source composite with:
+   - `source_image`
+   - `piece_path` (preferred) / `path` (legacy)
+   - `piece_index`
+   - `bounding_box` (x,y,w,h)
+   - `segmentation_method`
 
 ## Dependencies
 - OpenCV (`cv2`) or scikit-image for image processing

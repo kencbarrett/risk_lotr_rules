@@ -1019,9 +1019,9 @@ def segment_extracted_images(images_dir: str = "cheatsheet_images",
         clear_output: If True, clear output directory before processing
     """
     try:
-        from segment_images import segment_all_composites
+        from segment_images import segment_composite_images
         logger.info(f"Segmenting composite images from {images_dir}...")
-        results = segment_all_composites(
+        results = segment_composite_images(
             images_dir,
             output_dir,
             min_size=min_size,
@@ -1040,14 +1040,95 @@ def segment_extracted_images(images_dir: str = "cheatsheet_images",
         return {}
 
 
+def run_pipeline(
+    extract: bool = True,
+    extract_page_images: bool = False,
+    segment: bool = False,
+    label: bool = False,
+    segment_method: str = "auto",
+    segment_min_size: int = 1000,
+    segment_min_area: int = 500,
+    segment_filter_empty: bool = True,
+    segment_clear_output: bool = True,
+    labels_path: str = "piece_labels.json",
+    resolved_path: str = "resolved_manifest.json",
+    labeled_dir: str = "labeled",
+    skip_cheatsheet: bool = False,
+) -> None:
+    """Run the full pipeline (extract -> segment -> label)."""
+
+    objects = {}
+    if extract:
+        logger.info(f"Source: {SRC}")
+        objects = extract_objects(SRC, extract_page_images=extract_page_images)
+        if not skip_cheatsheet:
+            create_cheat_sheet(objects)
+            create_html_cheatsheet(objects, include_all_images=True)
+
+    if segment:
+        segment_extracted_images(
+            images_dir="cheatsheet_images",
+            output_dir="segmented_pieces",
+            min_size=segment_min_size,
+            method=segment_method,
+            min_area=segment_min_area,
+            filter_empty=segment_filter_empty,
+            clear_output=segment_clear_output,
+        )
+
+    if label:
+        try:
+            from label_pieces import run as run_label
+        except ImportError:
+            logger.error("label_pieces module not found; cannot label pieces")
+            return
+        run_label(
+            manifest_path="segmented_pieces/manifest.json",
+            labels_path=labels_path,
+            labeled_dir=labeled_dir,
+            resolved_path=resolved_path,
+            project_root=None,
+            clear_labeled=True,
+            use_symlinks=False,
+        )
+
+
 if __name__ == "__main__":
-    extract_page_imgs = "--page-images" in sys.argv
-    segment_imgs = "--segment" in sys.argv
-    
-    logger.info(f"Source: {SRC}")
-    objects = extract_objects(SRC, extract_page_images=extract_page_imgs)
-    create_cheat_sheet(objects)
-    create_html_cheatsheet(objects, include_all_images=True)
-    
-    if segment_imgs:
-        segment_extracted_images()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Extract, segment, and label LOTR Risk assets")
+    parser.add_argument("--page-images", action="store_true", help="Extract full page images as well")
+    parser.add_argument("--segment", action="store_true", help="Run segmentation on extracted images")
+    parser.add_argument("--label", action="store_true", help="Run labeling after segmentation")
+    parser.add_argument("--all", action="store_true", help="Run extract+segment+label (full pipeline)")
+    parser.add_argument("--no-cheatsheet", action="store_true", help="Skip generating cheat sheet outputs")
+    parser.add_argument(
+        "--segment-method",
+        default="auto",
+        choices=["auto", "contour", "color", "grid", "special"],
+        help="Segmentation method (used when --segment or --all)"
+    )
+    parser.add_argument("--segment-min-size", type=int, default=1000, help="Minimum composite dimension for segmentation")
+    parser.add_argument("--segment-min-area", type=int, default=500, help="Minimum detected piece area for segmentation")
+    parser.add_argument("--no-segment-clear", action="store_true", help="Do not clear segmented_pieces/ before running segmentation")
+    parser.add_argument("--labels", default="piece_labels.json", help="Path to piece_labels.json")
+    parser.add_argument("--resolved", default="resolved_manifest.json", help="Output path for resolved manifest")
+    parser.add_argument("--labeled-dir", default="labeled", help="Output directory for labeled pieces")
+
+    args = parser.parse_args()
+
+    run_pipeline(
+        extract=True,
+        extract_page_images=args.page_images,
+        segment=args.segment or args.all,
+        label=args.label or args.all,
+        segment_method=args.segment_method,
+        segment_min_size=args.segment_min_size,
+        segment_min_area=args.segment_min_area,
+        segment_filter_empty=True,
+        segment_clear_output=not args.no_segment_clear,
+        labels_path=args.labels,
+        resolved_path=args.resolved,
+        labeled_dir=args.labeled_dir,
+        skip_cheatsheet=args.no_cheatsheet,
+    )

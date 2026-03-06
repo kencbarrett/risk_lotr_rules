@@ -135,7 +135,8 @@ def suggest_labels(
     for entry in manifest_entries:
         composite_id = entry.get("composite_id")
         piece_index = entry.get("piece_index")
-        path = entry.get("path")
+        # Prefer the newer field name; fall back to legacy `path`
+        path = entry.get("piece_path") or entry.get("path")
         if composite_id is None or piece_index is None or not path:
             continue
         label, score = suggest_for_piece(path, root, references)
