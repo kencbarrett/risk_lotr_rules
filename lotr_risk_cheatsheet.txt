@@ -6,9 +6,13 @@ QUICK RULES OVERVIEW
 ----------------------------------------------------------------------
 Players: 2-4 | Age: 10+
 
-OBJECTIVE:
-  Score points by controlling territories, regions, and completing missions
-  Don't let the Fellowship reach Mount Doom!
+GAME COMPONENTS (what they are + where they fit)
+  • Strongholds: special territories. Each turn, place 1 battalion there (Step 1a); gives +1 defense and counts for scoring.
+  • Sites of Power: key locations. Controlling the whole region gives +2 points; conquering with a Leader lets you draw an Adventure card.
+  • Territories: basic map spaces. Control them for reinforcements (territories ÷ 3, min 3) and to earn region bonuses.
+  • Regions: groups of territories with a shared bonus. Controlling an entire region grants extra reinforcements (shown on board chart).
+  • Leaders: powerful units that add +1 to combat rolls and are required to conquer Sites of Power; if eliminated, you must replace them.
+  • Adventure Cards: drawn from Sites of Power. Missions score points, Events trigger immediate effects, and Power cards boost combat.
 
 THE 8 STEPS OF YOUR TURN:
   1. Receive and place reinforcements

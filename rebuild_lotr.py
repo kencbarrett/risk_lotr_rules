@@ -425,9 +425,13 @@ def create_cheat_sheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.t
         f.write("-" * 70 + "\n")
         f.write("Players: 2-4 | Age: 10+\n\n")
         
-        f.write("OBJECTIVE:\n")
-        f.write("  Score points by controlling territories, regions, and completing missions\n")
-        f.write("  Don't let the Fellowship reach Mount Doom!\n\n")
+        f.write("GAME COMPONENTS (what they are + where they fit)\n")
+        f.write("  • Strongholds: special territories. Each turn, place 1 battalion there (Step 1a); gives +1 defense and counts for scoring.\n")
+        f.write("  • Sites of Power: key locations. Controlling the whole region gives +2 points; conquering with a Leader lets you draw an Adventure card.\n")
+        f.write("  • Territories: basic map spaces. Control them for reinforcements (territories ÷ 3, min 3) and to earn region bonuses.\n")
+        f.write("  • Regions: groups of territories with a shared bonus. Controlling an entire region grants extra reinforcements (shown on board chart).\n")
+        f.write("  • Leaders: powerful units that add +1 to combat rolls and are required to conquer Sites of Power; if eliminated, you must replace them.\n")
+        f.write("  • Adventure Cards: drawn from Sites of Power. Missions score points, Events trigger immediate effects, and Power cards boost combat.\n\n")
         
         f.write("THE 8 STEPS OF YOUR TURN:\n")
         f.write("  1. Receive and place reinforcements\n")
@@ -638,8 +642,15 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         <h2>Quick Rules Overview</h2>
         <p><strong>Players:</strong> 2-4 | <strong>Age:</strong> 10+</p>
         
-        <h2>Objective</h2>
-        <p>Score points by controlling territories, regions, and completing missions. Don't let the Fellowship reach Mount Doom!</p>
+        <h2>Game Components</h2>
+        <ul>
+            <li><strong>Strongholds:</strong> special territories that grant +1 defense and score points; you must place 1 battalion there at the start of your turn (Step 1a).</li>
+            <li><strong>Sites of Power:</strong> key locations that award +2 points if you control the full region; conquering one with a Leader lets you draw an Adventure card.</li>
+            <li><strong>Territories:</strong> basic map spaces; controlling them gives reinforcements (territories ÷ 3, min 3) and is required for region bonuses.</li>
+            <li><strong>Regions:</strong> groups of territories that grant extra reinforcements when fully controlled (see board chart).</li>
+            <li><strong>Leaders:</strong> special units that add +1 to combat rolls; needed to conquer Sites of Power and must be replaced if defeated.</li>
+            <li><strong>Adventure Cards:</strong> drawn from Sites of Power; Missions score points, Events trigger immediate effects, and Power cards boost combat.</li>
+        </ul>
         
         <h2>The 8 Steps of Your Turn</h2>
         <div class="critical-box">
@@ -669,91 +680,71 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         <h3>Territories Reinforcement Table</h3>
         <table>
             <tr>
-                <th>Territories Controlled</th>
-                <th>Reinforcements</th>
+            <th>Territories Controlled</th>
+            <th>Reinforcements</th>
+            <th>Territories Controlled</th>
+            <th>Reinforcements</th>                
+            <th>Territories Controlled</th>
+            <th>Reinforcements</th>
             </tr>
             <tr>
-                <td>1-11</td>
-                <td>3</td>
+            <td>1-11</td>
+            <td>3</td>
+            <td>12-14</td>
+            <td>4</td>
+            <td>15-17</td>
+            <td>5</td>
             </tr>
             <tr>
-                <td>12-14</td>
-                <td>4</td>
+            <td>18-20</td>
+            <td>6</td>
+            <td>21-23</td>
+            <td>7</td>
+            <td>24-26</td>
+            <td>8</td>
             </tr>
             <tr>
-                <td>15-17</td>
-                <td>5</td>
+            <td>27-29</td>
+            <td>9</td>
+            <td>30-32</td>
+            <td>10</td>
+            <td>33-35</td>
+            <td>11</td>
             </tr>
             <tr>
-                <td>18-20</td>
-                <td>6</td>
+            <td>36-38</td>
+            <td>12</td>
+            <td>39-41</td>
+            <td>13</td>
+            <td>42-44</td>
+            <td>14</td>
             </tr>
             <tr>
-                <td>21-23</td>
-                <td>7</td>
+            <td>45-47</td>
+            <td>15</td>
+            <td>48-50</td>
+            <td>16</td>
+            <td>51-53</td>
+            <td>17</td>
             </tr>
             <tr>
-                <td>24-26</td>
-                <td>8</td>
+            <td>54-56</td>
+            <td>18</td>
+            <td>57-59</td>
+            <td>19</td>
+            <td>60-62</td>
+            <td>20</td>
             </tr>
             <tr>
-                <td>27-29</td>
-                <td>9</td>
-            </tr>
-            <tr>
-                <td>30-32</td>
-                <td>10</td>
-            </tr>
-            <tr>
-                <td>33-35</td>
-                <td>11</td>
-            </tr>
-            <tr>
-                <td>36-38</td>
-                <td>12</td>
-            </tr>
-            <tr>
-                <td>39-41</td>
-                <td>13</td>
-            </tr>
-            <tr>
-                <td>42-44</td>
-                <td>14</td>
-            </tr>
-            <tr>
-                <td>45-47</td>
-                <td>15</td>
-            </tr>
-            <tr>
-                <td>48-50</td>
-                <td>16</td>
-            </tr>
-            <tr>
-                <td>51-53</td>
-                <td>17</td>
-            </tr>
-            <tr>
-                <td>54-56</td>
-                <td>18</td>
-            </tr>
-            <tr>
-                <td>57-59</td>
-                <td>19</td>
-            </tr>
-            <tr>
-                <td>60-62</td>
-                <td>20</td>
-            </tr>
-            <tr>
-                <td>63</td>
-                <td>21</td>
-            </tr>
-            <tr>
-                <td>64+</td>
-                <td>÷3, round up</td>
+            <td>63</td>
+            <td>21</td>
+            <td>64+</td>
+            <td>÷3, round up</td>
+            <td></td>
+            <td></td>
             </tr>
         </table>
-        
+                
         <div class="warning-box">
             <p><strong>Remember:</strong> Region bonuses are shown on the gameboard chart. Different regions give different bonuses (typically 2-11 reinforcements per complete region).</p>
         </div>
@@ -999,6 +990,130 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
     logger.info(f"✓ HTML cheat sheet created: {output_path}")
 
 
+def create_pdf_cheatsheet_text(objects: dict, output_path: str = "lotr_risk_cheatsheet_text.pdf"):
+    """Create a simple PDF cheatsheet with the same content order as the text output."""
+    pdf = fitz.open()
+    page = pdf.new_page()  # letter size
+
+    # Helpers
+    def textbox(rect, text, fontsize=10, align=0):
+        page.insert_textbox(rect, text, fontsize=fontsize, fontname="helv", align=align)
+
+    title = "RISK: LORD OF THE RINGS - QUICK REFERENCE"
+    quick_overview = "Players: 2-4 | Age: 10+"
+    game_components = (
+        "GAME COMPONENTS (what they are + where they fit)\n"
+        "• Strongholds: special territories. Each turn place 1 battalion there (Step 1a); gives +1 defense and counts for scoring.\n"
+        "• Sites of Power: key locations. Controlling the whole region gives +2 points; conquering with a Leader lets you draw an Adventure card.\n"
+        "• Territories: basic map spaces. Control them for reinforcements (territories ÷ 3, min 3) and to earn region bonuses.\n"
+        "• Regions: groups of territories with a shared bonus. Controlling an entire region grants extra reinforcements (shown on board chart).\n"
+        "• Leaders: powerful units that add +1 to combat rolls and are required to conquer Sites of Power; if eliminated, you must replace them.\n"
+        "• Adventure Cards: drawn from Sites of Power. Missions score points, Events trigger immediate effects, and Power cards boost combat.\n"
+    )
+
+    turn_steps = (
+        "THE 8 STEPS OF YOUR TURN:\n"
+        "1. Receive and place reinforcements\n"
+        "   - 1a. Reinforce Strongholds (place 1 battalion per stronghold)\n"
+        "   - 1b. Count Territories (÷3, min 3)\n"
+        "   - 1c. Add Region Bonuses (see Reinforcements table)\n"
+        "   - 1d. Turn in Card Sets if you have 5+ cards (see Card Set Bonuses)\n"
+        "   - 1e. Place ALL reinforcements\n"
+        "2. Combat (invade other territories)\n"
+        "3. Fortify your position (optional)\n"
+        "4. Collect a territory card (if you conquered)\n"
+        "5. Collect an adventure card (if leader conquered)\n"
+        "6. Replace a leader (if you have none)\n"
+        "7. Try to find the Ring (EVIL only - see Finding the Ring section)\n"
+        "8. Move the Fellowship (see Fellowship Movement section)\n"
+    )
+
+    # Layout
+    margin = 30
+    width = page.rect.width - margin * 2
+    y = margin
+
+    textbox(fitz.Rect(margin, y, margin + width, y + 40), title, fontsize=20, align=1)
+    y += 50
+    textbox(fitz.Rect(margin, y, margin + width, y + 20), quick_overview, fontsize=11, align=1)
+    y += 30
+    textbox(fitz.Rect(margin, y, margin + width, y + 160), game_components, fontsize=9)
+    y += 170
+    textbox(fitz.Rect(margin, y, margin + width, y + 310), turn_steps, fontsize=9)
+
+    # Add a reference page (tables) if needed
+    page2 = pdf.new_page()
+    page = page2  # ensure subsequent drawing uses the new page object
+    textbox(fitz.Rect(margin, margin, margin + width, margin + 30), "Reference Tables", fontsize=14, align=0)
+
+    pdf.save(output_path)
+    logger.info(f"✓ Text-style PDF cheat sheet created: {output_path}")
+
+
+def create_pdf_cheatsheet_cards(objects: dict, output_path: str = "lotr_risk_cheatsheet_cards.pdf"):
+    """Create a card-style PDF cheatsheet."""
+    pdf = fitz.open()
+    page = pdf.new_page()
+
+    def draw_card(page, rect, title, body, header_color=(0.15, 0.45, 0.75)):
+        # Card background
+        page.draw_rect(rect, color=(0, 0, 0), fill=(0.96, 0.96, 0.96), width=1)
+
+        # Header bar
+        header_h = 26
+        header_rect = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y0 + header_h)
+        page.draw_rect(header_rect, color=header_color, fill=header_color, width=0)
+        title_rect = fitz.Rect(rect.x0 + 10, rect.y0 + 4, rect.x1 - 10, rect.y0 + header_h - 4)
+        page.insert_textbox(title_rect, title, fontsize=12, fontname="helv", color=(1, 1, 1), align=0)
+
+        # Body content
+        body_rect = fitz.Rect(rect.x0 + 10, rect.y0 + header_h + 8, rect.x1 - 10, rect.y1 - 10)
+        page.insert_textbox(body_rect, body, fontsize=9, fontname="helv", align=0)
+
+    cards = [
+        ("Quick Stats", "Players: 2-4\nAge: 10+\nObjective: Score points and stop the Fellowship."),
+        ("Game Components", 
+         "• Strongholds: +1 defense, auto-reinforce each turn.\n"
+         "• Sites of Power: grant Adventure draws + end-game points.\n"
+         "• Leaders: +1 combat, required for Sites of Power, replace if defeated."),
+        ("Turn Steps (Overview)",
+         "1. Reinforce (strongholds + territories + region bonuses)\n"
+         "2. Combat\n3. Fortify\n4. Collect territory card (if you conquered)\n"
+         "5. Collect adventure card (if you conquered a Site of Power)\n"
+         "6. Replace a leader (if none remain)\n7. Try to find the Ring (Evil only)\n8. Move the Fellowship"),
+        ("Reinforcements", 
+         "Territories ÷ 3 (min 3)\nRegion bonus = see board chart\n\nCard sets: turn in if 5+ cards (mandatory)"),
+        ("Combat Bonuses", 
+         "• Leader: +1 to highest die (attack or defense)\n"
+         "• Strongholds: +1 to highest defense die\n"
+         "• Tie goes to defender"),
+        ("Adventure Cards", 
+         "• Mission: score points by completing\n"
+         "• Event: play immediately (draw again)\n"
+         "• Power: play during combat for advantage"),
+    ]
+
+    cols = 2
+    margin = 34
+    gutter = 18
+    card_w = (page.rect.width - margin * 2 - gutter * (cols - 1)) / cols
+    card_h = 200
+
+    for i, (title, body) in enumerate(cards):
+        col = i % cols
+        row = i // cols
+        rect = fitz.Rect(
+            margin + col * (card_w + gutter),
+            margin + row * (card_h + gutter),
+            margin + col * (card_w + gutter) + card_w,
+            margin + row * (card_h + gutter) + card_h,
+        )
+        draw_card(page, rect, title, body)
+
+    pdf.save(output_path)
+    logger.info(f"✓ Card-style PDF cheat sheet created: {output_path}")
+
+
 def segment_extracted_images(images_dir: str = "cheatsheet_images",
                             output_dir: str = "segmented_pieces",
                             min_size: int = 1000,
@@ -1064,6 +1179,8 @@ def run_pipeline(
         if not skip_cheatsheet:
             create_cheat_sheet(objects)
             create_html_cheatsheet(objects, include_all_images=True)
+            create_pdf_cheatsheet_text(objects)
+            create_pdf_cheatsheet_cards(objects)
 
     if segment:
         segment_extracted_images(
