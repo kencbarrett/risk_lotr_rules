@@ -993,7 +993,9 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
 def create_pdf_cheatsheet_text(objects: dict, output_path: str = "lotr_risk_cheatsheet_text.pdf"):
     """Create a simple PDF cheatsheet with the same content order as the text output."""
     pdf = fitz.open()
-    page = pdf.new_page()  # letter size
+    # Use landscape letter for better horizontal space
+    letter_w, letter_h = fitz.paper_size("letter")
+    page = pdf.new_page(width=letter_h, height=letter_w)
 
     # Helpers
     def textbox(rect, text, fontsize=10, align=0):
@@ -1042,7 +1044,7 @@ def create_pdf_cheatsheet_text(objects: dict, output_path: str = "lotr_risk_chea
     textbox(fitz.Rect(margin, y, margin + width, y + 310), turn_steps, fontsize=9)
 
     # Add a reference page (tables) if needed
-    page2 = pdf.new_page()
+    page2 = pdf.new_page(width=letter_h, height=letter_w)
     page = page2  # ensure subsequent drawing uses the new page object
     textbox(fitz.Rect(margin, margin, margin + width, margin + 30), "Reference Tables", fontsize=14, align=0)
 
@@ -1053,7 +1055,42 @@ def create_pdf_cheatsheet_text(objects: dict, output_path: str = "lotr_risk_chea
 def create_pdf_cheatsheet_cards(objects: dict, output_path: str = "lotr_risk_cheatsheet_cards.pdf"):
     """Create a card-style PDF cheatsheet."""
     pdf = fitz.open()
-    page = pdf.new_page()
+    # Use landscape letter to give more horizontal space for cards
+    letter_w, letter_h = fitz.paper_size("letter")
+    page = pdf.new_page(width=letter_h, height=letter_w)
+
+    def measure_text_height(text: str, width: float, fontname="helv", fontsize=9, padding: float = 6.0) -> float:
+        """Estimate height required to render given text inside a box of given width."""
+        # Rough line-wrapping using fitz Font measurement
+        font = fitz.Font(fontname)
+        line_height = fontsize * 1.2
+
+        def wrap_line(line: str) -> int:
+            if not line:
+                return 1
+            if font.text_length(line, fontsize) <= width:
+                return 1
+            # Split by spaces, then build lines
+            words = line.split(" ")
+            current = ""
+            lines = 0
+            for w in words:
+                candidate = (current + " " + w).strip() if current else w
+                if font.text_length(candidate, fontsize) <= width:
+                    current = candidate
+                else:
+                    lines += 1
+                    current = w
+            if current:
+                lines += 1
+            return max(lines, 1)
+
+        total_lines = sum(wrap_line(l) for l in text.splitlines())
+        return total_lines * line_height + padding * 2
+
+    def measure_table_height(headers, rows, fontsize=8, padding: float = 4.0) -> float:
+        row_height = fontsize * 1.2 + padding * 2
+        return (1 + len(rows)) * row_height + padding
 
     def draw_card(page, rect, title, body, header_color=(0.15, 0.45, 0.75)):
         # Card background
@@ -1068,7 +1105,61 @@ def create_pdf_cheatsheet_cards(objects: dict, output_path: str = "lotr_risk_che
 
         # Body content
         body_rect = fitz.Rect(rect.x0 + 10, rect.y0 + header_h + 8, rect.x1 - 10, rect.y1 - 10)
-        page.insert_textbox(body_rect, body, fontsize=9, fontname="helv", align=0)
+        page.insert_textbox(body_rect, body or "", fontsize=9, fontname="helv", align=0)
+        return body_rect
+
+    def draw_table(page, rect, headers, rows, fontname="helv", fontsize=8, padding: float = 5.0):
+        """Draw a simple table inside a given rectangle."""
+        cols = len(headers)
+        if cols == 0:
+            return
+
+        # Equal-width columns
+        col_width = rect.width / cols
+        row_height = fontsize * 1.2 + padding * 2
+
+        # Draw header background
+        header_rect = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y0 + row_height)
+        page.draw_rect(header_rect, color=(0.15, 0.45, 0.75), fill=(0.15, 0.45, 0.75), width=0)
+
+        # Draw grid lines and fill in text
+        y = rect.y0
+        for row_index, row in enumerate([headers] + rows):
+            row_top = y
+            row_bottom = y + row_height
+            # Horizontal line
+            page.draw_line((rect.x0, row_bottom), (rect.x1, row_bottom), color=(0, 0, 0), width=0.3)
+
+            # Column cells
+            for col_index in range(cols):
+                col_left = rect.x0 + col_index * col_width
+                col_right = col_left + col_width
+
+                # Vertical line
+                if col_index > 0:
+                    page.draw_line((col_left, row_top), (col_left, row_bottom), color=(0, 0, 0), width=0.3)
+
+                # Text in cell
+                try:
+                    cell_text = row[col_index]
+                except IndexError:
+                    cell_text = ""
+                text_color = (1, 1, 1) if row_index == 0 else (0, 0, 0)
+                text_x = col_left + padding
+                # Adjust for baseline (fitz insert_text uses y as baseline), so add a bit of vertical padding
+                text_y = row_top + padding + fontsize * 0.3
+                page.insert_text(
+                    (text_x, text_y),
+                    cell_text,
+                    fontsize=fontsize,
+                    fontname=fontname,
+                    color=text_color,
+                )
+
+            y += row_height
+
+        # Outer border
+        page.draw_rect(rect, color=(0, 0, 0), width=0.5)
 
     cards = [
         ("Quick Stats", "Players: 2-4\nAge: 10+\nObjective: Score points and stop the Fellowship."),
@@ -1081,12 +1172,57 @@ def create_pdf_cheatsheet_cards(objects: dict, output_path: str = "lotr_risk_che
          "2. Combat\n3. Fortify\n4. Collect territory card (if you conquered)\n"
          "5. Collect adventure card (if you conquered a Site of Power)\n"
          "6. Replace a leader (if none remain)\n7. Try to find the Ring (Evil only)\n8. Move the Fellowship"),
-        ("Reinforcements", 
-         "Territories ÷ 3 (min 3)\nRegion bonus = see board chart\n\nCard sets: turn in if 5+ cards (mandatory)"),
-        ("Combat Bonuses", 
-         "• Leader: +1 to highest die (attack or defense)\n"
-         "• Strongholds: +1 to highest defense die\n"
-         "• Tie goes to defender"),
+        ("Reinforcements", {
+            "type": "table",
+            "headers": ["Territories", "Reinforcements"],
+            "rows": [
+                ["1-11", "3"],
+                ["12-14", "4"],
+                ["15-17", "5"],
+                ["18-20", "6"],
+                ["21+", "÷3, round up"],
+            ],
+        }),
+        ("Card Set Bonuses", {
+            "type": "table",
+            "headers": ["Card Set", "Bonus Battalions"],
+            "rows": [
+                ["3 Elven Archers", "4"],
+                ["3 Dark Riders", "6"],
+                ["3 Eagles", "8"],
+                ["1 Elven Archer + 1 Dark Rider + 1 Eagle", "10"],
+            ],
+        }),
+        ("Battalion Values", {
+            "type": "table",
+            "headers": ["Good Armies", "Value", "Evil Armies", "Value"],
+            "rows": [
+                ["Elven Archer", "1 battalion", "Orc", "1 battalion"],
+                ["Rider of Rohan", "3 battalions", "Dark Rider", "3 battalions"],
+                ["Eagle", "5 battalions", "Cave Troll", "5 battalions"],
+            ],
+        }),
+        ("Combat Bonuses", {
+            "type": "table",
+            "headers": ["Condition", "Bonus"],
+            "rows": [
+                ["Leader attacking", "+1 to highest attack die"],
+                ["Leader defending", "+1 to higher defense die"],
+                ["Stronghold defending", "+1 to higher defense die"],
+                ["Leader + Stronghold defending", "+2 to higher defense die"],
+            ],
+        }),
+        ("Scoring Points", {
+            "type": "table",
+            "headers": ["Item", "Points"],
+            "rows": [
+                ["Each territory controlled", "1 point"],
+                ["Each stronghold controlled", "2 points"],
+                ["Each complete region controlled", "Equal to that region's battalion bonus"],
+                ["Each Site of Power controlled", "2 points (only if you control the entire region)"],
+                ["Adventure cards played", "Points indicated on the card (cards in hand don't count)"],
+            ],
+        }),
         ("Adventure Cards", 
          "• Mission: score points by completing\n"
          "• Event: play immediately (draw again)\n"
@@ -1097,18 +1233,41 @@ def create_pdf_cheatsheet_cards(objects: dict, output_path: str = "lotr_risk_che
     margin = 34
     gutter = 18
     card_w = (page.rect.width - margin * 2 - gutter * (cols - 1)) / cols
-    card_h = 200
 
-    for i, (title, body) in enumerate(cards):
-        col = i % cols
-        row = i // cols
-        rect = fitz.Rect(
-            margin + col * (card_w + gutter),
-            margin + row * (card_h + gutter),
-            margin + col * (card_w + gutter) + card_w,
-            margin + row * (card_h + gutter) + card_h,
-        )
-        draw_card(page, rect, title, body)
+    # Track vertical position for each column for flow layout
+    col_y = [margin] * cols
+    page_height = page.rect.height
+
+    def get_card_height(body) -> float:
+        header_h = 26
+        body_top_margin = 8
+        body_bottom_margin = 10
+        if isinstance(body, dict) and body.get("type") == "table":
+            body_height = measure_table_height(body.get("headers", []), body.get("rows", []))
+        else:
+            body_height = measure_text_height(str(body or ""), card_w - 20, fontsize=9)
+        return header_h + body_top_margin + body_height + body_bottom_margin
+
+    for title, body in cards:
+        # Choose the column with lowest y (masonry-ish layout)
+        col = min(range(cols), key=lambda c: col_y[c])
+        y = col_y[col]
+
+        # Start a new page if needed
+        card_h = get_card_height(body)
+        if y + card_h > page_height - margin:
+            page = pdf.new_page(width=letter_h, height=letter_w)
+            col_y = [margin] * cols
+            y = margin
+
+        x = margin + col * (card_w + gutter)
+        rect = fitz.Rect(x, y, x + card_w, y + card_h)
+
+        body_rect = draw_card(page, rect, title, body if not isinstance(body, dict) else "")
+        if isinstance(body, dict) and body.get("type") == "table":
+            draw_table(page, body_rect, body.get("headers", []), body.get("rows", []))
+
+        col_y[col] += card_h + gutter
 
     pdf.save(output_path)
     logger.info(f"✓ Card-style PDF cheat sheet created: {output_path}")
