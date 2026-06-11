@@ -10,6 +10,7 @@ segmented_pieces/
 extracted_images/
 images/
 risk-lord-of-the-rings-edition conv_png/
+cheatsheet_images/
 
 # Distribution / packaging
 .DS_Store
