@@ -12,6 +12,7 @@ extracted_images/
 images/
 risk-lord-of-the-rings-edition conv_png/
 cheatsheet_images/
+experiments/
 
 # Distribution / packaging
 .DS_Store
