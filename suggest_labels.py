@@ -79,6 +79,7 @@ def suggest_for_piece(
     piece_path: str,
     project_root: str,
     references: Dict[str, Any],
+    manifest_dir: Optional[str] = None,
 ) -> Tuple[Optional[str], float]:
     """
     Return (best_label, score) for a piece image, or (None, 0) if no refs or unreadable.
@@ -89,7 +90,11 @@ def suggest_for_piece(
         import cv2
     except ImportError:
         return None, 0.0
-    full_path = os.path.join(project_root, piece_path) if not os.path.isabs(piece_path) else piece_path
+    if os.path.isabs(piece_path):
+        full_path = piece_path
+    else:
+        base_for_relative = manifest_dir or project_root or os.getcwd()
+        full_path = os.path.join(base_for_relative, piece_path)
     if not os.path.isfile(full_path):
         return None, 0.0
     img = cv2.imread(full_path)
@@ -132,6 +137,7 @@ def suggest_labels(
 
     # composite_id -> { piece_index_str -> label }
     suggested: Dict[str, Dict[str, str]] = {}
+    manifest_dir = os.path.dirname(manifest_full) or None
     for entry in manifest_entries:
         composite_id = entry.get("composite_id")
         piece_index = entry.get("piece_index")
@@ -139,7 +145,7 @@ def suggest_labels(
         path = entry.get("piece_path") or entry.get("path")
         if composite_id is None or piece_index is None or not path:
             continue
-        label, score = suggest_for_piece(path, root, references)
+        label, score = suggest_for_piece(path, root, references, manifest_dir=manifest_dir)
         if label and score >= min_score:
             if composite_id not in suggested:
                 suggested[composite_id] = {}

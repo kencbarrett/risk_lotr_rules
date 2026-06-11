@@ -534,7 +534,8 @@ def segment_composite_image(image_path: str, output_dir: str,
                            padding: int = 5,
                            filter_empty: bool = True,
                            clear_output: bool = True,
-                           emit_manifest: bool = True) -> Tuple[List[str], List[Dict[str, Any]]]:
+                           emit_manifest: bool = True,
+                           manifest_root: Optional[str] = None) -> Tuple[List[str], List[Dict[str, Any]]]:
     """
     Segment a composite image into individual pieces.
 
@@ -651,7 +652,13 @@ def segment_composite_image(image_path: str, output_dir: str,
 
         if emit_manifest:
             try:
-                path_rel = os.path.relpath(output_path)
+                # Make piece paths consistently relative to the manifest location
+                # If caller provided a manifest_root (the directory where manifest.json will be written),
+                # compute paths relative to that; otherwise fall back to default relpath behavior.
+                if manifest_root:
+                    path_rel = os.path.relpath(output_path, start=os.path.abspath(manifest_root))
+                else:
+                    path_rel = os.path.relpath(output_path)
             except ValueError:
                 path_rel = output_path
             x, y, w, h = bbox
@@ -861,6 +868,7 @@ if __name__ == "__main__":
             filter_empty=filter_empty,
             clear_output=clear_output,
             emit_manifest=emit_manifest,
+            manifest_root=output_dir,
         )
         if emit_manifest and manifest_entries:
             manifest_path = os.path.join(output_dir, "manifest.json")

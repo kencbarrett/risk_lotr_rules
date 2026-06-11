@@ -59,6 +59,7 @@ def resolve_labels(
     manifest_entries: List[Dict[str, Any]],
     piece_labels: Dict[str, Dict[str, str]],
     base_dir: Optional[str] = None,
+    manifest_dir: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
     """
     Merge manifest and labels into resolved entries with path, label, category.
@@ -87,9 +88,20 @@ def resolve_labels(
         if not label:
             continue
         category = "battalion" if label in BATTALION_LABELS else "other"
-        path_use = path
+
+        # Resolve path relative to manifest location if necessary, then make
+        # it relative to the project/root dir (base_dir) for downstream use.
+        if os.path.isabs(path):
+            full_path = path
+        else:
+            base_for_relative = manifest_dir or base_dir or os.getcwd()
+            full_path = os.path.normpath(os.path.join(base_for_relative, path))
+
         if base_dir:
-            path_use = os.path.relpath(path, base_dir) if os.path.isabs(path) else path
+            path_use = os.path.relpath(full_path, base_dir)
+        else:
+            path_use = full_path
+
         resolved.append({
             "path": path_use,
             "label": label,
@@ -163,7 +175,8 @@ def run(
 
     manifest_entries = load_manifest(manifest_full)
     piece_labels = load_piece_labels(labels_full)
-    resolved = resolve_labels(manifest_entries, piece_labels, base_dir=root)
+    manifest_dir = os.path.dirname(manifest_full) or None
+    resolved = resolve_labels(manifest_entries, piece_labels, base_dir=root, manifest_dir=manifest_dir)
 
     logger.info("Resolved %d labeled pieces (of %d in manifest)", len(resolved), len(manifest_entries))
 
