@@ -418,6 +418,84 @@ def is_valid_piece(piece: np.ndarray, min_content_ratio: float = 0.05) -> bool:
     return has_meaningful_content(piece, min_content_ratio=min_content_ratio)
 
 
+def _detect_special_composite_type(image: np.ndarray, image_path: str) -> Optional[str]:
+    """Detect if the image looks like a known composite type requiring special rules."""
+    name = os.path.basename(image_path).lower()
+
+    # Filename hints (most reliable)
+    if "battalion" in name or "battalions" in name:
+        return "battalion_sheet"
+    if "shield" in name or "leader" in name:
+        return "leader_shields"
+    if "site" in name or "sites" in name:
+        return "site_icons"
+
+    # Size/shape heuristics (fallback)
+    h, w = image.shape[:2]
+    aspect = w / (h + 1e-9)
+    # Some battalion sheets are wide and short; allow tuning later
+    if aspect > 2.0 and w > 800 and h > 200:
+        return "battalion_sheet"
+    # A roughly square block of icons could be sites grid
+    if 0.8 < aspect < 1.3 and w > 400 and h > 400:
+        return "site_icons"
+
+    return None
+
+
+def _fixed_grid_boxes(image: np.ndarray, rows: int, cols: int,
+                      min_area: int = 0, padding: int = 0) -> List[Tuple[int, int, int, int]]:
+    """Return grid-aligned bounding boxes covering the image."""
+    h, w = image.shape[:2]
+    cell_w = w // cols
+    cell_h = h // rows
+
+    boxes: List[Tuple[int, int, int, int]] = []
+    for r in range(rows):
+        for c in range(cols):
+            x = c * cell_w
+            y = r * cell_h
+            # Ensure last cell reaches the edge (avoid losing pixels)
+            w_box = cell_w if c < cols - 1 else w - x
+            h_box = cell_h if r < rows - 1 else h - y
+            boxes.append((x, y, w_box, h_box))
+
+    # Optionally filter boxes that are too small
+    if min_area > 0:
+        boxes = [b for b in boxes if b[2] * b[3] >= min_area]
+
+    # Apply padding (keeping within bounds)
+    if padding > 0:
+        padded = []
+        for (x, y, bw, bh) in boxes:
+            x0 = max(0, x - padding)
+            y0 = max(0, y - padding)
+            x1 = min(w, x + bw + padding)
+            y1 = min(h, y + bh + padding)
+            padded.append((x0, y0, x1 - x0, y1 - y0))
+        boxes = padded
+
+    return boxes
+
+
+def _segment_special_composite(image: np.ndarray, composite_type: str,
+                               min_area: int, padding: int) -> List[Tuple[int, int, int, int]]:
+    """Special-case segmentation strategies for known composite types."""
+    if composite_type == "battalion_sheet":
+        # Typical battalion sheets are 2 rows x 3 columns
+        return _fixed_grid_boxes(image, rows=2, cols=3, min_area=min_area, padding=padding)
+    if composite_type == "leader_shields":
+        # Leaders typically appear as 2 items side-by-side (approx)
+        return _fixed_grid_boxes(image, rows=1, cols=2, min_area=min_area, padding=padding)
+    if composite_type == "site_icons":
+        # Sites of Power are often arranged in a grid
+        # Default to a 3x3 grid, but allow downstream filtering by validity
+        return _fixed_grid_boxes(image, rows=3, cols=3, min_area=min_area, padding=padding)
+
+    # Unknown composite type
+    return []
+
+
 # Helper functions for merging boxes found by multiple detectors
 def _offset_boxes(boxes: List[Tuple[int,int,int,int]], dx: int, dy: int = 0) -> List[Tuple[int,int,int,int]]:
     return [(x + dx, y + dy, w, h) for (x, y, w, h) in boxes]
@@ -456,7 +534,8 @@ def segment_composite_image(image_path: str, output_dir: str,
                            padding: int = 5,
                            filter_empty: bool = True,
                            clear_output: bool = True,
-                           emit_manifest: bool = True) -> Tuple[List[str], List[Dict[str, Any]]]:
+                           emit_manifest: bool = True,
+                           manifest_root: Optional[str] = None) -> Tuple[List[str], List[Dict[str, Any]]]:
     """
     Segment a composite image into individual pieces.
 
@@ -483,38 +562,59 @@ def segment_composite_image(image_path: str, output_dir: str,
     # Create output directory
     os.makedirs(output_dir, exist_ok=True)
     
-    # Detect pieces based on method
+    # Detect pieces based on method or known composite patterns
     boxes: List[Tuple[int,int,int,int]] = []
-    if method == "auto":
-        # Try contour detection first (good for center artwork / pieces)
-        boxes = detect_pieces_contour(image, min_area=min_area)
-        # Always also try color-based detection on left/right strips to catch column icons
-        strip_w = max(40, width // 10)
-        left_strip = image[:, :strip_w]
-        right_strip = image[:, -strip_w:]
-        # use a smaller min_area for strip detection (icons are smaller)
-        strip_min_area = max(100, int(min_area * 0.3))
-        left_boxes = detect_pieces_color_based(left_strip, min_area=strip_min_area)
-        right_boxes = detect_pieces_color_based(right_strip, min_area=strip_min_area)
-        # offset right boxes to page coords
-        right_boxes = _offset_boxes(right_boxes, dx=width - strip_w)
-        # left boxes already in page coords (dx=0)
-        # merge without duplicating existing boxes
-        boxes = _add_unique_boxes(boxes, left_boxes)
-        boxes = _add_unique_boxes(boxes, right_boxes)
-        if len(boxes) < 2:
-            # If nothing found, try whole-image color-based fallback
-            logger.info("Few pieces found; trying full-image color-based detection...")
+    used_method = method
+
+    # Special-case handlers for known composites (when using auto or special)
+    if method in ("auto", "special"):
+        composite_type = _detect_special_composite_type(image, image_path)
+        if composite_type:
+            logger.info(f"Detected special composite type: {composite_type}")
+            boxes = _segment_special_composite(image, composite_type, min_area=min_area, padding=padding)
+            used_method = f"special:{composite_type}"
+
+    # Fall back to requested/common methods if no special rules applied
+    if not boxes:
+        if method == "auto":
+            # Try contour detection first (good for center artwork / pieces)
+            boxes = detect_pieces_contour(image, min_area=min_area)
+            # Always also try color-based detection on left/right strips to catch column icons
+            strip_w = max(40, width // 10)
+            left_strip = image[:, :strip_w]
+            right_strip = image[:, -strip_w:]
+            # use a smaller min_area for strip detection (icons are smaller)
+            strip_min_area = max(100, int(min_area * 0.3))
+            left_boxes = detect_pieces_color_based(left_strip, min_area=strip_min_area)
+            right_boxes = detect_pieces_color_based(right_strip, min_area=strip_min_area)
+            # offset right boxes to page coords
+            right_boxes = _offset_boxes(right_boxes, dx=width - strip_w)
+            # left boxes already in page coords (dx=0)
+            # merge without duplicating existing boxes
+            boxes = _add_unique_boxes(boxes, left_boxes)
+            boxes = _add_unique_boxes(boxes, right_boxes)
+            if len(boxes) < 2:
+                # If nothing found, try whole-image color-based fallback
+                logger.info("Few pieces found; trying full-image color-based detection...")
+                boxes = detect_pieces_color_based(image, min_area=min_area)
+        elif method == "contour":
+            boxes = detect_pieces_contour(image, min_area=min_area)
+        elif method == "color":
             boxes = detect_pieces_color_based(image, min_area=min_area)
-    elif method == "contour":
-        boxes = detect_pieces_contour(image, min_area=min_area)
-    elif method == "color":
-        boxes = detect_pieces_color_based(image, min_area=min_area)
-    elif method == "grid":
-        boxes = detect_pieces_grid(image)
-    else:
-        logger.warning(f"Unknown method '{method}', using contour detection")
-        boxes = detect_pieces_contour(image, min_area=min_area)
+        elif method == "grid":
+            boxes = detect_pieces_grid(image)
+        elif method == "special":
+            # attempted special already; fall back to contour
+            boxes = detect_pieces_contour(image, min_area=min_area)
+        else:
+            logger.warning(f"Unknown method '{method}', using contour detection")
+            boxes = detect_pieces_contour(image, min_area=min_area)
+
+    if len(boxes) == 0:
+        logger.warning(f"No pieces detected in {image_path}")
+        return ([], [])
+
+    logger.info(f"Detected {len(boxes)} potential pieces")
     
     if len(boxes) == 0:
         logger.warning(f"No pieces detected in {image_path}")
@@ -552,22 +652,73 @@ def segment_composite_image(image_path: str, output_dir: str,
 
         if emit_manifest:
             try:
-                path_rel = os.path.relpath(output_path)
+                # Make piece paths consistently relative to the manifest location
+                # If caller provided a manifest_root (the directory where manifest.json will be written),
+                # compute paths relative to that; otherwise fall back to default relpath behavior.
+                if manifest_root:
+                    path_rel = os.path.relpath(output_path, start=os.path.abspath(manifest_root))
+                else:
+                    path_rel = os.path.relpath(output_path)
             except ValueError:
                 path_rel = output_path
+            x, y, w, h = bbox
             manifest_entries.append({
                 "composite_id": composite_id,
+                "source_image": os.path.basename(image_path),
                 "piece_index": piece_index,
-                "path": path_rel,
+                "piece_path": path_rel,
+                "path": path_rel,  # kept for backwards compatibility
+                "bounding_box": {"x": x, "y": y, "w": w, "h": h},
+                "segmentation_method": used_method,
             })
-        
-        x, y, w, h = bbox
+        else:
+            x, y, w, h = bbox
         logger.debug(f"  Extracted piece {piece_index}: {w}x{h} at ({x}, {y})")
     
     if skipped_count > 0:
         logger.info(f"Skipped {skipped_count} empty/background pieces")
     logger.info(f"✓ Extracted {len(extracted_paths)} valid pieces to {output_dir}")
     return (extracted_paths, manifest_entries)
+
+
+def segment_composite_images(input_dir: str, output_dir: str,
+                              min_size: int = 1000,
+                              method: str = "auto",
+                              min_area: int = 500,
+                              filter_empty: bool = True,
+                              clear_output: bool = True,
+                              emit_manifest: bool = True) -> dict:
+    """Segment a directory of extracted composite images.
+
+    This is the preferred public API for downstream scripts.
+
+    It scans `input_dir` for image files, checks whether each appears to be a composite,
+    then delegates to :func:`segment_composite_image` for the actual segmentation.
+
+    Args:
+        input_dir: Directory containing extracted composite images
+        output_dir: Directory to save segmented pieces
+        min_size: Minimum dimension to consider as a composite image
+        method: Segmentation method to use (auto/contour/color/grid)
+        min_area: Minimum area for detected pieces
+        filter_empty: If True, filter out empty/background-only pieces
+        clear_output: If True, clear output directory before processing
+        emit_manifest: If True, write a combined manifest.json to output_dir
+
+    Returns:
+        Dictionary mapping input image paths to lists of extracted piece paths
+    """
+    # Delegate to the existing implementation that already performs per-image segmentation
+    return segment_all_composites(
+        input_dir=input_dir,
+        output_dir=output_dir,
+        min_size=min_size,
+        method=method,
+        min_area=min_area,
+        filter_empty=filter_empty,
+        clear_output=clear_output,
+        emit_manifest=emit_manifest,
+    )
 
 
 def segment_all_composites(input_dir: str, output_dir: str,
@@ -664,9 +815,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-m", "--method",
-        choices=["auto", "contour", "color", "grid"],
+        choices=["auto", "contour", "color", "grid", "special"],
         default="auto",
-        help="Segmentation method (default: auto)"
+        help="Segmentation method (default: auto). Use 'special' to apply known composite heuristics."
     )
     parser.add_argument(
         "--min-size",
@@ -717,6 +868,7 @@ if __name__ == "__main__":
             filter_empty=filter_empty,
             clear_output=clear_output,
             emit_manifest=emit_manifest,
+            manifest_root=output_dir,
         )
         if emit_manifest and manifest_entries:
             manifest_path = os.path.join(output_dir, "manifest.json")
@@ -725,7 +877,7 @@ if __name__ == "__main__":
             logger.info(f"Wrote manifest: {manifest_path}")
     else:
         # Process directory
-        segment_all_composites(
+        segment_composite_images(
             args.input_dir,
             args.output,
             min_size=args.min_size,

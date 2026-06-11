@@ -425,9 +425,13 @@ def create_cheat_sheet(objects: dict, output_path: str = "lotr_risk_cheatsheet.t
         f.write("-" * 70 + "\n")
         f.write("Players: 2-4 | Age: 10+\n\n")
         
-        f.write("OBJECTIVE:\n")
-        f.write("  Score points by controlling territories, regions, and completing missions\n")
-        f.write("  Don't let the Fellowship reach Mount Doom!\n\n")
+        f.write("GAME COMPONENTS (what they are + where they fit)\n")
+        f.write("  • Strongholds: special territories. Each turn, place 1 battalion there (Step 1a); gives +1 defense and counts for scoring.\n")
+        f.write("  • Sites of Power: key locations. Controlling the whole region gives +2 points; conquering with a Leader lets you draw an Adventure card.\n")
+        f.write("  • Territories: basic map spaces. Control them for reinforcements (territories ÷ 3, min 3) and to earn region bonuses.\n")
+        f.write("  • Regions: groups of territories with a shared bonus. Controlling an entire region grants extra reinforcements (shown on board chart).\n")
+        f.write("  • Leaders: powerful units that add +1 to combat rolls and are required to conquer Sites of Power; if eliminated, you must replace them.\n")
+        f.write("  • Adventure Cards: drawn from Sites of Power. Missions score points, Events trigger immediate effects, and Power cards boost combat.\n\n")
         
         f.write("THE 8 STEPS OF YOUR TURN:\n")
         f.write("  1. Receive and place reinforcements\n")
@@ -638,8 +642,15 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         <h2>Quick Rules Overview</h2>
         <p><strong>Players:</strong> 2-4 | <strong>Age:</strong> 10+</p>
         
-        <h2>Objective</h2>
-        <p>Score points by controlling territories, regions, and completing missions. Don't let the Fellowship reach Mount Doom!</p>
+        <h2>Game Components</h2>
+        <ul>
+            <li><strong>Strongholds:</strong> special territories that grant +1 defense and score points; you must place 1 battalion there at the start of your turn (Step 1a).</li>
+            <li><strong>Sites of Power:</strong> key locations that award +2 points if you control the full region; conquering one with a Leader lets you draw an Adventure card.</li>
+            <li><strong>Territories:</strong> basic map spaces; controlling them gives reinforcements (territories ÷ 3, min 3) and is required for region bonuses.</li>
+            <li><strong>Regions:</strong> groups of territories that grant extra reinforcements when fully controlled (see board chart).</li>
+            <li><strong>Leaders:</strong> special units that add +1 to combat rolls; needed to conquer Sites of Power and must be replaced if defeated.</li>
+            <li><strong>Adventure Cards:</strong> drawn from Sites of Power; Missions score points, Events trigger immediate effects, and Power cards boost combat.</li>
+        </ul>
         
         <h2>The 8 Steps of Your Turn</h2>
         <div class="critical-box">
@@ -669,91 +680,71 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
         <h3>Territories Reinforcement Table</h3>
         <table>
             <tr>
-                <th>Territories Controlled</th>
-                <th>Reinforcements</th>
+            <th>Territories Controlled</th>
+            <th>Reinforcements</th>
+            <th>Territories Controlled</th>
+            <th>Reinforcements</th>                
+            <th>Territories Controlled</th>
+            <th>Reinforcements</th>
             </tr>
             <tr>
-                <td>1-11</td>
-                <td>3</td>
+            <td>1-11</td>
+            <td>3</td>
+            <td>12-14</td>
+            <td>4</td>
+            <td>15-17</td>
+            <td>5</td>
             </tr>
             <tr>
-                <td>12-14</td>
-                <td>4</td>
+            <td>18-20</td>
+            <td>6</td>
+            <td>21-23</td>
+            <td>7</td>
+            <td>24-26</td>
+            <td>8</td>
             </tr>
             <tr>
-                <td>15-17</td>
-                <td>5</td>
+            <td>27-29</td>
+            <td>9</td>
+            <td>30-32</td>
+            <td>10</td>
+            <td>33-35</td>
+            <td>11</td>
             </tr>
             <tr>
-                <td>18-20</td>
-                <td>6</td>
+            <td>36-38</td>
+            <td>12</td>
+            <td>39-41</td>
+            <td>13</td>
+            <td>42-44</td>
+            <td>14</td>
             </tr>
             <tr>
-                <td>21-23</td>
-                <td>7</td>
+            <td>45-47</td>
+            <td>15</td>
+            <td>48-50</td>
+            <td>16</td>
+            <td>51-53</td>
+            <td>17</td>
             </tr>
             <tr>
-                <td>24-26</td>
-                <td>8</td>
+            <td>54-56</td>
+            <td>18</td>
+            <td>57-59</td>
+            <td>19</td>
+            <td>60-62</td>
+            <td>20</td>
             </tr>
             <tr>
-                <td>27-29</td>
-                <td>9</td>
-            </tr>
-            <tr>
-                <td>30-32</td>
-                <td>10</td>
-            </tr>
-            <tr>
-                <td>33-35</td>
-                <td>11</td>
-            </tr>
-            <tr>
-                <td>36-38</td>
-                <td>12</td>
-            </tr>
-            <tr>
-                <td>39-41</td>
-                <td>13</td>
-            </tr>
-            <tr>
-                <td>42-44</td>
-                <td>14</td>
-            </tr>
-            <tr>
-                <td>45-47</td>
-                <td>15</td>
-            </tr>
-            <tr>
-                <td>48-50</td>
-                <td>16</td>
-            </tr>
-            <tr>
-                <td>51-53</td>
-                <td>17</td>
-            </tr>
-            <tr>
-                <td>54-56</td>
-                <td>18</td>
-            </tr>
-            <tr>
-                <td>57-59</td>
-                <td>19</td>
-            </tr>
-            <tr>
-                <td>60-62</td>
-                <td>20</td>
-            </tr>
-            <tr>
-                <td>63</td>
-                <td>21</td>
-            </tr>
-            <tr>
-                <td>64+</td>
-                <td>÷3, round up</td>
+            <td>63</td>
+            <td>21</td>
+            <td>64+</td>
+            <td>÷3, round up</td>
+            <td></td>
+            <td></td>
             </tr>
         </table>
-        
+                
         <div class="warning-box">
             <p><strong>Remember:</strong> Region bonuses are shown on the gameboard chart. Different regions give different bonuses (typically 2-11 reinforcements per complete region).</p>
         </div>
@@ -999,6 +990,289 @@ def create_html_cheatsheet(objects: dict, output_path: str = "lotr_risk_cheatshe
     logger.info(f"✓ HTML cheat sheet created: {output_path}")
 
 
+def create_pdf_cheatsheet_text(objects: dict, output_path: str = "lotr_risk_cheatsheet_text.pdf"):
+    """Create a simple PDF cheatsheet with the same content order as the text output."""
+    pdf = fitz.open()
+    # Use landscape letter for better horizontal space
+    letter_w, letter_h = fitz.paper_size("letter")
+    page = pdf.new_page(width=letter_h, height=letter_w)
+
+    # Helpers
+    def textbox(rect, text, fontsize=10, align=0):
+        page.insert_textbox(rect, text, fontsize=fontsize, fontname="helv", align=align)
+
+    title = "RISK: LORD OF THE RINGS - QUICK REFERENCE"
+    quick_overview = "Players: 2-4 | Age: 10+"
+    game_components = (
+        "GAME COMPONENTS (what they are + where they fit)\n"
+        "• Strongholds: special territories. Each turn place 1 battalion there (Step 1a); gives +1 defense and counts for scoring.\n"
+        "• Sites of Power: key locations. Controlling the whole region gives +2 points; conquering with a Leader lets you draw an Adventure card.\n"
+        "• Territories: basic map spaces. Control them for reinforcements (territories ÷ 3, min 3) and to earn region bonuses.\n"
+        "• Regions: groups of territories with a shared bonus. Controlling an entire region grants extra reinforcements (shown on board chart).\n"
+        "• Leaders: powerful units that add +1 to combat rolls and are required to conquer Sites of Power; if eliminated, you must replace them.\n"
+        "• Adventure Cards: drawn from Sites of Power. Missions score points, Events trigger immediate effects, and Power cards boost combat.\n"
+    )
+
+    turn_steps = (
+        "THE 8 STEPS OF YOUR TURN:\n"
+        "1. Receive and place reinforcements\n"
+        "   - 1a. Reinforce Strongholds (place 1 battalion per stronghold)\n"
+        "   - 1b. Count Territories (÷3, min 3)\n"
+        "   - 1c. Add Region Bonuses (see Reinforcements table)\n"
+        "   - 1d. Turn in Card Sets if you have 5+ cards (see Card Set Bonuses)\n"
+        "   - 1e. Place ALL reinforcements\n"
+        "2. Combat (invade other territories)\n"
+        "3. Fortify your position (optional)\n"
+        "4. Collect a territory card (if you conquered)\n"
+        "5. Collect an adventure card (if leader conquered)\n"
+        "6. Replace a leader (if you have none)\n"
+        "7. Try to find the Ring (EVIL only - see Finding the Ring section)\n"
+        "8. Move the Fellowship (see Fellowship Movement section)\n"
+    )
+
+    # Layout
+    margin = 30
+    width = page.rect.width - margin * 2
+    y = margin
+
+    textbox(fitz.Rect(margin, y, margin + width, y + 40), title, fontsize=20, align=1)
+    y += 50
+    textbox(fitz.Rect(margin, y, margin + width, y + 20), quick_overview, fontsize=11, align=1)
+    y += 30
+    textbox(fitz.Rect(margin, y, margin + width, y + 160), game_components, fontsize=9)
+    y += 170
+    textbox(fitz.Rect(margin, y, margin + width, y + 310), turn_steps, fontsize=9)
+
+    # Add a reference page (tables) if needed
+    page2 = pdf.new_page(width=letter_h, height=letter_w)
+    page = page2  # ensure subsequent drawing uses the new page object
+    textbox(fitz.Rect(margin, margin, margin + width, margin + 30), "Reference Tables", fontsize=14, align=0)
+
+    pdf.save(output_path)
+    logger.info(f"✓ Text-style PDF cheat sheet created: {output_path}")
+
+
+def create_pdf_cheatsheet_cards(objects: dict, output_path: str = "lotr_risk_cheatsheet_cards.pdf"):
+    """Create a card-style PDF cheatsheet."""
+    pdf = fitz.open()
+    # Use landscape letter to give more horizontal space for cards
+    letter_w, letter_h = fitz.paper_size("letter")
+    page = pdf.new_page(width=letter_h, height=letter_w)
+
+    def measure_text_height(text: str, width: float, fontname="helv", fontsize=9, padding: float = 6.0) -> float:
+        """Estimate height required to render given text inside a box of given width."""
+        # Rough line-wrapping using fitz Font measurement
+        font = fitz.Font(fontname)
+        line_height = fontsize * 1.2
+
+        def wrap_line(line: str) -> int:
+            if not line:
+                return 1
+            if font.text_length(line, fontsize) <= width:
+                return 1
+            # Split by spaces, then build lines
+            words = line.split(" ")
+            current = ""
+            lines = 0
+            for w in words:
+                candidate = (current + " " + w).strip() if current else w
+                if font.text_length(candidate, fontsize) <= width:
+                    current = candidate
+                else:
+                    lines += 1
+                    current = w
+            if current:
+                lines += 1
+            return max(lines, 1)
+
+        total_lines = sum(wrap_line(l) for l in text.splitlines())
+        return total_lines * line_height + padding * 2
+
+    def measure_table_height(headers, rows, fontsize=8, padding: float = 4.0) -> float:
+        row_height = fontsize * 1.2 + padding * 2
+        return (1 + len(rows)) * row_height + padding
+
+    def draw_card(page, rect, title, body, header_color=(0.15, 0.45, 0.75)):
+        # Card background
+        page.draw_rect(rect, color=(0, 0, 0), fill=(0.96, 0.96, 0.96), width=1)
+
+        # Header bar
+        header_h = 26
+        header_rect = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y0 + header_h)
+        page.draw_rect(header_rect, color=header_color, fill=header_color, width=0)
+        title_rect = fitz.Rect(rect.x0 + 10, rect.y0 + 4, rect.x1 - 10, rect.y0 + header_h - 4)
+        page.insert_textbox(title_rect, title, fontsize=12, fontname="helv", color=(1, 1, 1), align=0)
+
+        # Body content
+        body_rect = fitz.Rect(rect.x0 + 10, rect.y0 + header_h + 8, rect.x1 - 10, rect.y1 - 10)
+        page.insert_textbox(body_rect, body or "", fontsize=9, fontname="helv", align=0)
+        return body_rect
+
+    def draw_table(page, rect, headers, rows, fontname="helv", fontsize=8, padding: float = 5.0):
+        """Draw a simple table inside a given rectangle."""
+        cols = len(headers)
+        if cols == 0:
+            return
+
+        # Equal-width columns
+        col_width = rect.width / cols
+        row_height = fontsize * 1.2 + padding * 2
+
+        # Draw header background
+        header_rect = fitz.Rect(rect.x0, rect.y0, rect.x1, rect.y0 + row_height)
+        page.draw_rect(header_rect, color=(0.15, 0.45, 0.75), fill=(0.15, 0.45, 0.75), width=0)
+
+        # Draw grid lines and fill in text
+        y = rect.y0
+        for row_index, row in enumerate([headers] + rows):
+            row_top = y
+            row_bottom = y + row_height
+            # Horizontal line
+            page.draw_line((rect.x0, row_bottom), (rect.x1, row_bottom), color=(0, 0, 0), width=0.3)
+
+            # Column cells
+            for col_index in range(cols):
+                col_left = rect.x0 + col_index * col_width
+                col_right = col_left + col_width
+
+                # Vertical line
+                if col_index > 0:
+                    page.draw_line((col_left, row_top), (col_left, row_bottom), color=(0, 0, 0), width=0.3)
+
+                # Text in cell
+                try:
+                    cell_text = row[col_index]
+                except IndexError:
+                    cell_text = ""
+                text_color = (1, 1, 1) if row_index == 0 else (0, 0, 0)
+                text_x = col_left + padding
+                # Adjust for baseline (fitz insert_text uses y as baseline), so add a bit of vertical padding
+                text_y = row_top + padding + fontsize * 0.3
+                page.insert_text(
+                    (text_x, text_y),
+                    cell_text,
+                    fontsize=fontsize,
+                    fontname=fontname,
+                    color=text_color,
+                )
+
+            y += row_height
+
+        # Outer border
+        page.draw_rect(rect, color=(0, 0, 0), width=0.5)
+
+    cards = [
+        ("Quick Stats", "Players: 2-4\nAge: 10+\nObjective: Score points and stop the Fellowship."),
+        ("Game Components", 
+         "• Strongholds: +1 defense, auto-reinforce each turn.\n"
+         "• Sites of Power: grant Adventure draws + end-game points.\n"
+         "• Leaders: +1 combat, required for Sites of Power, replace if defeated."),
+        ("Turn Steps (Overview)",
+         "1. Reinforce (strongholds + territories + region bonuses)\n"
+         "2. Combat\n3. Fortify\n4. Collect territory card (if you conquered)\n"
+         "5. Collect adventure card (if you conquered a Site of Power)\n"
+         "6. Replace a leader (if none remain)\n7. Try to find the Ring (Evil only)\n8. Move the Fellowship"),
+        ("Reinforcements", {
+            "type": "table",
+            "headers": ["Territories", "Reinforcements"],
+            "rows": [
+                ["1-11", "3"],
+                ["12-14", "4"],
+                ["15-17", "5"],
+                ["18-20", "6"],
+                ["21+", "÷3, round up"],
+            ],
+        }),
+        ("Card Set Bonuses", {
+            "type": "table",
+            "headers": ["Card Set", "Bonus Battalions"],
+            "rows": [
+                ["3 Elven Archers", "4"],
+                ["3 Dark Riders", "6"],
+                ["3 Eagles", "8"],
+                ["1 Elven Archer + 1 Dark Rider + 1 Eagle", "10"],
+            ],
+        }),
+        ("Battalion Values", {
+            "type": "table",
+            "headers": ["Good Armies", "Value", "Evil Armies", "Value"],
+            "rows": [
+                ["Elven Archer", "1 battalion", "Orc", "1 battalion"],
+                ["Rider of Rohan", "3 battalions", "Dark Rider", "3 battalions"],
+                ["Eagle", "5 battalions", "Cave Troll", "5 battalions"],
+            ],
+        }),
+        ("Combat Bonuses", {
+            "type": "table",
+            "headers": ["Condition", "Bonus"],
+            "rows": [
+                ["Leader attacking", "+1 to highest attack die"],
+                ["Leader defending", "+1 to higher defense die"],
+                ["Stronghold defending", "+1 to higher defense die"],
+                ["Leader + Stronghold defending", "+2 to higher defense die"],
+            ],
+        }),
+        ("Scoring Points", {
+            "type": "table",
+            "headers": ["Item", "Points"],
+            "rows": [
+                ["Each territory controlled", "1 point"],
+                ["Each stronghold controlled", "2 points"],
+                ["Each complete region controlled", "Equal to that region's battalion bonus"],
+                ["Each Site of Power controlled", "2 points (only if you control the entire region)"],
+                ["Adventure cards played", "Points indicated on the card (cards in hand don't count)"],
+            ],
+        }),
+        ("Adventure Cards", 
+         "• Mission: score points by completing\n"
+         "• Event: play immediately (draw again)\n"
+         "• Power: play during combat for advantage"),
+    ]
+
+    cols = 2
+    margin = 34
+    gutter = 18
+    card_w = (page.rect.width - margin * 2 - gutter * (cols - 1)) / cols
+
+    # Track vertical position for each column for flow layout
+    col_y = [margin] * cols
+    page_height = page.rect.height
+
+    def get_card_height(body) -> float:
+        header_h = 26
+        body_top_margin = 8
+        body_bottom_margin = 10
+        if isinstance(body, dict) and body.get("type") == "table":
+            body_height = measure_table_height(body.get("headers", []), body.get("rows", []))
+        else:
+            body_height = measure_text_height(str(body or ""), card_w - 20, fontsize=9)
+        return header_h + body_top_margin + body_height + body_bottom_margin
+
+    for title, body in cards:
+        # Choose the column with lowest y (masonry-ish layout)
+        col = min(range(cols), key=lambda c: col_y[c])
+        y = col_y[col]
+
+        # Start a new page if needed
+        card_h = get_card_height(body)
+        if y + card_h > page_height - margin:
+            page = pdf.new_page(width=letter_h, height=letter_w)
+            col_y = [margin] * cols
+            y = margin
+
+        x = margin + col * (card_w + gutter)
+        rect = fitz.Rect(x, y, x + card_w, y + card_h)
+
+        body_rect = draw_card(page, rect, title, body if not isinstance(body, dict) else "")
+        if isinstance(body, dict) and body.get("type") == "table":
+            draw_table(page, body_rect, body.get("headers", []), body.get("rows", []))
+
+        col_y[col] += card_h + gutter
+
+    pdf.save(output_path)
+    logger.info(f"✓ Card-style PDF cheat sheet created: {output_path}")
+
+
 def segment_extracted_images(images_dir: str = "cheatsheet_images",
                             output_dir: str = "segmented_pieces",
                             min_size: int = 1000,
@@ -1019,9 +1293,9 @@ def segment_extracted_images(images_dir: str = "cheatsheet_images",
         clear_output: If True, clear output directory before processing
     """
     try:
-        from segment_images import segment_all_composites
+        from segment_images import segment_composite_images
         logger.info(f"Segmenting composite images from {images_dir}...")
-        results = segment_all_composites(
+        results = segment_composite_images(
             images_dir,
             output_dir,
             min_size=min_size,
@@ -1040,14 +1314,97 @@ def segment_extracted_images(images_dir: str = "cheatsheet_images",
         return {}
 
 
+def run_pipeline(
+    extract: bool = True,
+    extract_page_images: bool = False,
+    segment: bool = False,
+    label: bool = False,
+    segment_method: str = "auto",
+    segment_min_size: int = 1000,
+    segment_min_area: int = 500,
+    segment_filter_empty: bool = True,
+    segment_clear_output: bool = True,
+    labels_path: str = "piece_labels.json",
+    resolved_path: str = "resolved_manifest.json",
+    labeled_dir: str = "labeled",
+    skip_cheatsheet: bool = False,
+) -> None:
+    """Run the full pipeline (extract -> segment -> label)."""
+
+    objects = {}
+    if extract:
+        logger.info(f"Source: {SRC}")
+        objects = extract_objects(SRC, extract_page_images=extract_page_images)
+        if not skip_cheatsheet:
+            create_cheat_sheet(objects)
+            create_html_cheatsheet(objects, include_all_images=True)
+            create_pdf_cheatsheet_text(objects)
+            create_pdf_cheatsheet_cards(objects)
+
+    if segment:
+        segment_extracted_images(
+            images_dir="cheatsheet_images",
+            output_dir="segmented_pieces",
+            min_size=segment_min_size,
+            method=segment_method,
+            min_area=segment_min_area,
+            filter_empty=segment_filter_empty,
+            clear_output=segment_clear_output,
+        )
+
+    if label:
+        try:
+            from label_pieces import run as run_label
+        except ImportError:
+            logger.error("label_pieces module not found; cannot label pieces")
+            return
+        run_label(
+            manifest_path="segmented_pieces/manifest.json",
+            labels_path=labels_path,
+            labeled_dir=labeled_dir,
+            resolved_path=resolved_path,
+            project_root=None,
+            clear_labeled=True,
+            use_symlinks=False,
+        )
+
+
 if __name__ == "__main__":
-    extract_page_imgs = "--page-images" in sys.argv
-    segment_imgs = "--segment" in sys.argv
-    
-    logger.info(f"Source: {SRC}")
-    objects = extract_objects(SRC, extract_page_images=extract_page_imgs)
-    create_cheat_sheet(objects)
-    create_html_cheatsheet(objects, include_all_images=True)
-    
-    if segment_imgs:
-        segment_extracted_images()
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Extract, segment, and label LOTR Risk assets")
+    parser.add_argument("--page-images", action="store_true", help="Extract full page images as well")
+    parser.add_argument("--segment", action="store_true", help="Run segmentation on extracted images")
+    parser.add_argument("--label", action="store_true", help="Run labeling after segmentation")
+    parser.add_argument("--all", action="store_true", help="Run extract+segment+label (full pipeline)")
+    parser.add_argument("--no-cheatsheet", action="store_true", help="Skip generating cheat sheet outputs")
+    parser.add_argument(
+        "--segment-method",
+        default="auto",
+        choices=["auto", "contour", "color", "grid", "special"],
+        help="Segmentation method (used when --segment or --all)"
+    )
+    parser.add_argument("--segment-min-size", type=int, default=1000, help="Minimum composite dimension for segmentation")
+    parser.add_argument("--segment-min-area", type=int, default=500, help="Minimum detected piece area for segmentation")
+    parser.add_argument("--no-segment-clear", action="store_true", help="Do not clear segmented_pieces/ before running segmentation")
+    parser.add_argument("--labels", default="piece_labels.json", help="Path to piece_labels.json")
+    parser.add_argument("--resolved", default="resolved_manifest.json", help="Output path for resolved manifest")
+    parser.add_argument("--labeled-dir", default="labeled", help="Output directory for labeled pieces")
+
+    args = parser.parse_args()
+
+    run_pipeline(
+        extract=True,
+        extract_page_images=args.page_images,
+        segment=args.segment or args.all,
+        label=args.label or args.all,
+        segment_method=args.segment_method,
+        segment_min_size=args.segment_min_size,
+        segment_min_area=args.segment_min_area,
+        segment_filter_empty=True,
+        segment_clear_output=not args.no_segment_clear,
+        labels_path=args.labels,
+        resolved_path=args.resolved,
+        labeled_dir=args.labeled_dir,
+        skip_cheatsheet=args.no_cheatsheet,
+    )

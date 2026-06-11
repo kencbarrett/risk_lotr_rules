@@ -20,7 +20,7 @@ for page_index in range(len(doc)):
             ext = extracted["ext"]          # Original extension (e.g., 'jpeg', 'png')
             
             # Save using the original format
-            dirname = os.path.abspath("extracted_impages")
+            dirname = os.path.abspath("extracted_images")
             os.makedirs(dirname, exist_ok=True)
 
             filename = f"page{page_index}_img{img_index}.{ext}"

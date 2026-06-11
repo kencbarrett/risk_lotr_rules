@@ -7,7 +7,12 @@ __pycache__/
 *.so
 *.pdf
 segmented_pieces/
+extracted_images/
+images/
+risk-lord-of-the-rings-edition conv_png/
+
 # Distribution / packaging
+.DS_Store
 .Python
 build/
 develop-eggs/

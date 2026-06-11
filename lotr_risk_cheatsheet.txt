@@ -6,9 +6,13 @@ QUICK RULES OVERVIEW
 ----------------------------------------------------------------------
 Players: 2-4 | Age: 10+
 
-OBJECTIVE:
-  Score points by controlling territories, regions, and completing missions
-  Don't let the Fellowship reach Mount Doom!
+GAME COMPONENTS (what they are + where they fit)
+  • Strongholds: special territories. Each turn, place 1 battalion there (Step 1a); gives +1 defense and counts for scoring.
+  • Sites of Power: key locations. Controlling the whole region gives +2 points; conquering with a Leader lets you draw an Adventure card.
+  • Territories: basic map spaces. Control them for reinforcements (territories ÷ 3, min 3) and to earn region bonuses.
+  • Regions: groups of territories with a shared bonus. Controlling an entire region grants extra reinforcements (shown on board chart).
+  • Leaders: powerful units that add +1 to combat rolls and are required to conquer Sites of Power; if eliminated, you must replace them.
+  • Adventure Cards: drawn from Sites of Power. Missions score points, Events trigger immediate effects, and Power cards boost combat.
 
 THE 8 STEPS OF YOUR TURN:
   1. Receive and place reinforcements
@@ -203,7 +207,7 @@ gameboard is divided into 64 territories, each with its own name.
 CONTENTS
 •  1 Gold-Tone Ring
 • 4 Armies
-•  126 Cards
+•  126 Cards  
 (64 Territory Cards,  
 2 Wild Cards,  
 60 Adventure Cards)
@@ -397,7 +401,7 @@ POWER CARD
 that color. Place your battalions in a pile near you. The yellow 
 and green pieces represent the good armies, while the black 
 and red ones represent the evil armies.
-*  In a 3-player game, one player will control a good army while
+*  In a 3-player game, one player will control a good army while 
 the remaining two players control the two evil armies.
 Now get out your starting battalions. These battalions will be 
 placed on the board before play begins. The number of starting 
@@ -697,11 +701,11 @@ a few wordS about CoMbat
 Here are some terms used during combat:
 * The attaCker is the player whose turn it currently is.
 * The defender is the player being attacked.
-* An invaSion is when a territory is being attacked. The
+* An invaSion is when a territory is being attacked. The 
 invasion lasts until either the territory is taken over or 
 until the attacker calls off the invasion. You may be able 
 to invade more than one territory on your turn.
-* A battle is one roll of the dice (for each, the attacker and
+* A battle is one roll of the dice (for each, the attacker and 
 defender) during an invasion. An invasion may require 
 one battle or it may require dozens of battles.
 where Can i invade?
@@ -1045,9 +1049,9 @@ SCORING POINTS
 Calculate points as follows:
 *  1 point for every territory you control;
 *  2 points for every stronghold you control;
-*  Points for Adventure cards you played (as indicated at the
+*  Points for Adventure cards you played (as indicated at the 
 bottom of the card). Cards in your hand do not count;
-*  Points for complete regions held, equal to the battalion bonus
+*  Points for complete regions held, equal to the battalion bonus 
 of that region (for example, Mirkwood is worth 4 points since  
 is gives you 4 battalions for controlling it).
 F22670000_506812_RISK_LOTR_I.indd   16-17
@@ -1093,7 +1097,7 @@ Good wins if one of the following happens:
 *  The One Ring is thrown into Mount Doom.
 Evil wins if one of the following happens:
 * Both good players are eliminated, OR
-* The One Ring is found by an evil player (how you
+* The One Ring is found by an evil player (how you  
 find The One Ring is explained on the back).
 Note: It is possible, but unlikely, to win by conquering all of 
 Middle-earth before the Fellowship throws The One Ring into 
@@ -1105,16 +1109,16 @@ Gameplay for the 2-Player version is the same as the 3- to
 When playing with only 2 players, one must play a good army 
 and the other must play an evil army. A third, neutral army (one 
 of the two unused colors) also comes into play.
-*  Remove the wild cards from the Territory Deck. Separate the
+*  Remove the wild cards from the Territory Deck. Separate the 
 remaining cards into a good, an evil and a neutral deck. Shuffle 
 each deck and deal them to the players as shown below.
 GOOD PLAYER – 16 Good
 EVIL PLAYER – 16 Evil
 NEUTRAL ARMY – 21 Neutral
-* Each player places 1 battalion into each of his/her territories.
+* Each player places 1 battalion into each of his/her territories. 
 Each neutral territory gets 2 battalions of the neutral’s color 
 (for a total of 42 neutral battalions).
-* Roll a die to see who starts; the player with the higher roll
+* Roll a die to see who starts; the player with the higher roll 
 begins. In turn, place 1 battalion into an unclaimed territory 
 until each territory on the board has battalions in it. Players 
 then alternate placing their battalions into territories they 
@@ -1173,7 +1177,7 @@ in a territory controlled by evil. If so, the evil player who controls
 the territory rolls 2 dice (it doesn’t matter which color).
 *  If that evil player controls the entire region, add 1 to the dice roll.
 *  If that evil player’s Leader is in the territory, add 1 to the dice roll.
-*  If that evil player controls the entire region, and has a Leader
+*  If that evil player controls the entire region, and has a Leader 
 present, add 2 to the dice roll.
 If the total of the dice roll plus any bonuses added is 12 or higher, 
 The One Ring is found and evil instantly wins.
